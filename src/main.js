@@ -17,17 +17,22 @@ const THUMBNAIL_WIDTH = 320;
 // The files the user has chosen, in order. Merging uses this list.
 let files = [];
 
-// The file whose pages are currently shown in the grid
+// The file the user wants previewed. Stays put when other files are added or removed.
 let previewedFile = null;
+// The file whose pages are actually drawn in the grid right now
+let drawnFile = null;
 // Counts grid renders, so a slow older render can tell it has been replaced
 let latestRender = 0;
 
-// Shows a thumbnail of every page of the first file
+// Shows a thumbnail of every page of the previewed file
 async function renderPageGrid() {
-  const file = files[0];
-  // Removing a later file doesn't change the preview, so skip the redraw
-  if (file === previewedFile) return;
-  previewedFile = file;
+  // If the previewed file is gone (or nothing was chosen yet), use the first file
+  if (!files.includes(previewedFile)) previewedFile = files[0] ?? null;
+
+  const file = previewedFile;
+  // The grid already shows this file, so skip the redraw
+  if (file === drawnFile) return;
+  drawnFile = file;
 
   const thisRender = ++latestRender;
   pageGrid.replaceChildren();

@@ -34,13 +34,13 @@ I'm learning while building, and I need to be able to explain every part of this
 - Keep responses simple and concise.
 - After a change, briefly explain what you did and why, including key trade-offs.
 - When there are several reasonable approaches, briefly list them with your recommendation instead of choosing silently.
-- Prefer simple, readable code over clever code. Comment only where the intent isn't obvious.
+- Prefer simple, readable code over clever code. Add brief comments where intent or JavaScript behaviour isn't obvious, since I'm still learning the language.
 - Don't call something done unless it builds, lints and tests pass.
 - When we make a significant design decision, add a short entry to the Decisions log in `PLAN.md`.
 
 ## Git workflow
 
-- Each feature gets its own branch. Milestones are marked with version tags.
+- Each feature gets its own branch, built as a sequence of small commits (one step each, e.g. function, then tests, then edge cases). I commit after each step, so stop after each one. Milestones are marked with version tags.
 - You implement; I review the code and do all commits, merges and tags myself. Never run `git commit`, `git push`, `git merge` or `git tag`.
 - At the start of a task, check the current branch. If it doesn't match the feature, tell me and suggest a branch name rather than switching yourself.
 - When a change is ready for review, suggest a short commit message.

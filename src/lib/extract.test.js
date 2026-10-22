@@ -33,4 +33,30 @@ describe('extractPages', () => {
 
     expect(await pageWidths(result)).toEqual([110, 110, 100]);
   });
+
+  it('throws when no pages are selected', async () => {
+    const pdf = await createTestPdf([100]);
+
+    await expect(extractPages(pdf, [])).rejects.toThrow('No pages selected');
+  });
+
+  it('throws when a page does not exist', async () => {
+    const pdf = await createTestPdf([100, 110]);
+
+    // Index 2 is the third page, but the PDF only has two
+    await expect(extractPages(pdf, [0, 2])).rejects.toThrow(
+      'Page 3 does not exist',
+    );
+    await expect(extractPages(pdf, [-1])).rejects.toThrow(
+      'Page 0 does not exist',
+    );
+  });
+
+  it('throws a clear error for a file that is not a valid PDF', async () => {
+    const bad = new Uint8Array([1, 2, 3]);
+
+    await expect(extractPages(bad, [0])).rejects.toThrow(
+      'The file could not be read',
+    );
+  });
 });

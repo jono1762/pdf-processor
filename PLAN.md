@@ -1,11 +1,13 @@
 # PLAN.md
 
 ## Goal
+
 A free, open-source PDF toolkit that runs entirely in the browser.
 
 **Pitch:** Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
 ## v1a: Core page editor
+
 - Open one or more PDFs (file picker and drag-and-drop)
 - Page grid with thumbnails
 - Reorder pages (drag-and-drop), rotate, delete
@@ -14,18 +16,22 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 - "Try a sample" buttons using bundled sample documents
 
 ## v1b: OCR for scans
+
 - Detect pages with no text layer and offer OCR only for those
 - Add an invisible text layer aligned with the page so text can be selected and searched
 - Progress indicator and cancel button for OCR jobs
 
 **v1 is done when:**
+
 - There is a live deployed link
 - It works in recent Chrome, Firefox and Safari
 - Core PDF operations have unit tests
 - The DevTools Network tab shows no file data being sent anywhere
 
 ## v2: Images to clean PDF (tentative)
+
 Value here is engineering depth rather than a product gap, since phone scanner apps already do much of this.
+
 - Import photos of pages
 - Auto-detect page edges, crop and straighten (perspective correction)
 - Clean up: contrast, shadow removal, whitened background
@@ -33,6 +39,7 @@ Value here is engineering depth rather than a product gap, since phone scanner a
 - Sensible default download names based on the original file (e.g. `report-merged.pdf`, `report-ocr.pdf`)
 
 ## v3: Polish and stretch goals
+
 - Optional handwriting recognition (TrOCR via Transformers.js), downloaded only when the user asks for it
 - End-to-end tests
 - Performance on large files (hundreds of pages)
@@ -40,18 +47,22 @@ Value here is engineering depth rather than a product gap, since phone scanner a
 - README with demo GIF, feature list and key design decisions
 
 ## Sample documents
+
 Use content I create myself or that is public domain.
+
 - Multi-page digital PDF (reorder, merge, split)
 - Scanned printed page (OCR)
 - PDF with a sideways page (rotate)
 - Large PDF (performance)
 
 ## Out of scope
+
 - User accounts, cloud storage, or any backend
 - Editing the text content of PDFs
 - AI features that need a server
 
 ## Decisions log
+
 _Add an entry for each significant decision: date, decision, reason, alternatives considered._
 
 - **Client-side only.** Privacy is the core pitch, and it avoids hosting costs. Alternative: a backend with Python libraries, rejected because files would leave the device.

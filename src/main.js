@@ -7,7 +7,7 @@ const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
 const message = document.querySelector('#message');
 
-// The files the user has chosen, in order. Merging will use this list.
+// The files the user has chosen, in order. Merging uses this list.
 let files = [];
 
 // Rebuilds the visible list from the `files` array
@@ -17,16 +17,30 @@ function renderFileList() {
       const item = document.createElement('li');
       // textContent (not innerHTML) so a file name can never be treated as HTML
       item.textContent = file.name;
+
+      const removeButton = document.createElement('button');
+      removeButton.type = 'button';
+      removeButton.textContent = 'Remove';
+      removeButton.addEventListener('click', () => {
+        // Keep every file except this one, then redraw
+        files = files.filter((other) => other !== file);
+        renderFileList();
+      });
+      item.append(' ', removeButton);
+
       return item;
     }),
   );
-  // Nothing to merge until at least one file is chosen
-  mergeButton.disabled = files.length === 0;
+  // Merging needs at least two files
+  mergeButton.disabled = files.length < 2;
 }
 
 fileInput.addEventListener('change', () => {
-  // fileInput.files is not a real array; Array.from copies it into one
-  files = Array.from(fileInput.files);
+  // fileInput.files is not a real array; Array.from copies it into one.
+  // Adding to the list (not replacing it) lets the user pick files in several rounds.
+  files = [...files, ...Array.from(fileInput.files)];
+  // Clear the picker, otherwise choosing the same file again would not fire "change"
+  fileInput.value = '';
   message.textContent = '';
   renderFileList();
 });

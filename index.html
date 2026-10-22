@@ -6,7 +6,22 @@
     <title>PDF Processor</title>
   </head>
   <body>
-    <div id="app"></div>
+    <main>
+      <h1>PDF Processor</h1>
+
+      <label for="file-input">Choose PDFs to merge</label>
+      <input id="file-input" type="file" accept="application/pdf" multiple />
+
+      <ul id="file-list"></ul>
+    </main>
+
+    <footer>
+      <p>
+        Only open PDFs you trust. Files are processed on your device and never
+        uploaded.
+      </p>
+    </footer>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

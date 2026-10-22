@@ -26,9 +26,6 @@ let latestRender = 0;
 
 // Shows a thumbnail of every page of the previewed file
 async function renderPageGrid() {
-  // If the previewed file is gone (or nothing was chosen yet), use the first file
-  if (!files.includes(previewedFile)) previewedFile = files[0] ?? null;
-
   const file = previewedFile;
   // The grid already shows this file, so skip the redraw
   if (file === drawnFile) return;
@@ -72,11 +69,27 @@ async function renderPageGrid() {
 
 // Rebuilds the visible list from the `files` array
 function renderFileList() {
+  // If the previewed file is gone (or nothing was chosen yet), use the first file
+  if (!files.includes(previewedFile)) previewedFile = files[0] ?? null;
+
   fileList.replaceChildren(
     ...files.map((file) => {
       const item = document.createElement('li');
+      if (file === previewedFile) item.classList.add('previewed');
+
+      const name = document.createElement('span');
       // textContent (not innerHTML) so a file name can never be treated as HTML
-      item.textContent = file.name;
+      name.textContent = file.name;
+
+      const previewButton = document.createElement('button');
+      previewButton.type = 'button';
+      previewButton.textContent = 'Preview';
+      // The file already being previewed has nothing to switch to
+      previewButton.disabled = file === previewedFile;
+      previewButton.addEventListener('click', () => {
+        previewedFile = file;
+        renderFileList();
+      });
 
       const removeButton = document.createElement('button');
       removeButton.type = 'button';
@@ -86,7 +99,11 @@ function renderFileList() {
         files = files.filter((other) => other !== file);
         renderFileList();
       });
-      item.append(' ', removeButton);
+
+      const actions = document.createElement('div');
+      actions.className = 'file-actions';
+      actions.append(previewButton, removeButton);
+      item.append(name, actions);
 
       return item;
     }),

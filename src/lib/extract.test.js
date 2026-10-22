@@ -17,4 +17,20 @@ describe('extractPages', () => {
 
     expect(await pageWidths(result)).toEqual([110, 120]);
   });
+
+  it('follows the order given, so pages can be reordered', async () => {
+    const pdf = await createTestPdf([100, 110, 120]);
+
+    const result = await extractPages(pdf, [2, 0, 1]);
+
+    expect(await pageWidths(result)).toEqual([120, 100, 110]);
+  });
+
+  it('allows the same page more than once', async () => {
+    const pdf = await createTestPdf([100, 110]);
+
+    const result = await extractPages(pdf, [1, 1, 0]);
+
+    expect(await pageWidths(result)).toEqual([110, 110, 100]);
+  });
 });

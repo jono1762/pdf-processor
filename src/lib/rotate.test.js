@@ -36,4 +36,35 @@ describe('rotatePages', () => {
     // 270 + 180 = 450, which is the same as 90
     expect(await pageRotations(twice)).toEqual([90]);
   });
+
+  it('throws for an angle that is not 90, 180 or 270', async () => {
+    const pdf = await createTestPdf([100]);
+
+    await expect(rotatePages(pdf, [0], 45)).rejects.toThrow(
+      'Angle must be 90, 180 or 270',
+    );
+  });
+
+  it('throws when no pages are selected', async () => {
+    const pdf = await createTestPdf([100]);
+
+    await expect(rotatePages(pdf, [], 90)).rejects.toThrow('No pages selected');
+  });
+
+  it('throws when a page does not exist', async () => {
+    const pdf = await createTestPdf([100, 110]);
+
+    // Index 2 is the third page, but the PDF only has two
+    await expect(rotatePages(pdf, [0, 2], 90)).rejects.toThrow(
+      'Page 3 does not exist',
+    );
+  });
+
+  it('throws a clear error for a file that is not a valid PDF', async () => {
+    const bad = new Uint8Array([1, 2, 3]);
+
+    await expect(rotatePages(bad, [0], 90)).rejects.toThrow(
+      'The file could not be read',
+    );
+  });
 });

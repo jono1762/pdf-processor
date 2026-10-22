@@ -33,6 +33,8 @@ function renderFileList() {
   );
   // Merging needs at least two files
   mergeButton.disabled = files.length < 2;
+  // An old error is about the old list, so clear it whenever the list changes
+  message.textContent = '';
 }
 
 fileInput.addEventListener('change', () => {
@@ -41,7 +43,6 @@ fileInput.addEventListener('change', () => {
   files = [...files, ...Array.from(fileInput.files)];
   // Clear the picker, otherwise choosing the same file again would not fire "change"
   fileInput.value = '';
-  message.textContent = '';
   renderFileList();
 });
 

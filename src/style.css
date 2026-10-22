@@ -12,12 +12,12 @@ body {
   flex-direction: column;
 }
 
-/* A centred column that stays readable on wide screens */
+/* A centred column; the max width stops content stretching too far on huge screens */
 main,
 footer {
   /* width: 100% is needed because auto side margins stop a flex item stretching */
   width: 100%;
-  max-width: 40rem;
+  max-width: 64rem;
   margin: 0 auto;
 }
 
@@ -68,6 +68,30 @@ button {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Three equal columns; 1fr means one equal share of the width */
+#page-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+#page-grid figure {
+  margin: 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #52606d;
+}
+
+/* Fill the column; height: auto keeps the page's proportions */
+#page-grid canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #d9e2ec;
+  background: white;
 }
 
 #message {

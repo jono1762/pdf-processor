@@ -1,14 +1,54 @@
 import './style.css';
 import { mergePdfs } from './lib/merge.js';
 import { readFileBytes, downloadPdf } from './download.js';
+import { openPdfForRendering, renderPageThumbnail } from './lib/render.js';
 
 const fileInput = document.querySelector('#file-input');
 const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
 const message = document.querySelector('#message');
+const pageGrid = document.querySelector('#page-grid');
+
+// Roughly the width of one grid column, so thumbnails are drawn at about their shown size
+const THUMBNAIL_WIDTH = 320;
 
 // The files the user has chosen, in order. Merging uses this list.
 let files = [];
+
+// The file whose pages are currently shown in the grid
+let previewedFile = null;
+// Counts grid renders, so a slow older render can tell it has been replaced
+let latestRender = 0;
+
+// Shows a thumbnail of every page of the first file
+async function renderPageGrid() {
+  const file = files[0];
+  // Removing a later file doesn't change the preview, so skip the redraw
+  if (file === previewedFile) return;
+  previewedFile = file;
+
+  const thisRender = ++latestRender;
+  pageGrid.replaceChildren();
+  if (!file) return;
+
+  const pdfDoc = await openPdfForRendering(await readFileBytes(file));
+  try {
+    for (let i = 0; i < pdfDoc.numPages; i++) {
+      const canvas = await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH);
+      // The user changed the file list while we were drawing, so stop
+      if (thisRender !== latestRender) return;
+
+      const figure = document.createElement('figure');
+      const caption = document.createElement('figcaption');
+      caption.textContent = `Page ${i + 1}`;
+      figure.append(canvas, caption);
+      pageGrid.append(figure);
+    }
+  } finally {
+    // We only need the document while drawing; this frees its memory in PDF.js
+    pdfDoc.loadingTask.destroy();
+  }
+}
 
 // Rebuilds the visible list from the `files` array
 function renderFileList() {
@@ -35,6 +75,7 @@ function renderFileList() {
   mergeButton.disabled = files.length < 2;
   // An old error is about the old list, so clear it whenever the list changes
   message.textContent = '';
+  renderPageGrid();
 }
 
 fileInput.addEventListener('change', () => {

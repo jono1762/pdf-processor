@@ -20,16 +20,21 @@ export function openPdfForRendering(bytes) {
  * Draws one page onto a new canvas, scaled to the given width.
  * @param {import('pdfjs-dist').PDFDocumentProxy} pdfDoc - from openPdfForRendering
  * @param {number} pageIndex - zero-based page number
- * @param {number} width - thumbnail width in pixels
+ * @param {number} width - thumbnail width in CSS pixels
  * @returns {Promise<HTMLCanvasElement>}
  */
 export async function renderPageThumbnail(pdfDoc, pageIndex, width) {
   // PDF.js counts pages from 1, unlike the rest of our code
   const page = await pdfDoc.getPage(pageIndex + 1);
 
-  // Work out the scale that makes the page exactly `width` pixels wide
+  // High-resolution screens pack several real pixels into one CSS pixel
+  // (devicePixelRatio is 2 on many laptops and phones). Drawing that many
+  // pixels keeps the thumbnail sharp when CSS sets the displayed size.
+  const pixelWidth = width * window.devicePixelRatio;
+
+  // Work out the scale that makes the page exactly `pixelWidth` pixels wide
   const fullSize = page.getViewport({ scale: 1 });
-  const viewport = page.getViewport({ scale: width / fullSize.width });
+  const viewport = page.getViewport({ scale: pixelWidth / fullSize.width });
 
   const canvas = document.createElement('canvas');
   canvas.width = Math.floor(viewport.width);

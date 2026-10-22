@@ -1,4 +1,5 @@
 import { PDFDocument } from 'pdf-lib';
+import { loadPdf, checkPageIndices } from './validate.js';
 
 /**
  * Creates a new PDF containing only the chosen pages, in the order given.
@@ -8,32 +9,10 @@ import { PDFDocument } from 'pdf-lib';
  * @throws {Error} if the file can't be read, no pages are chosen, or a page doesn't exist
  */
 export async function extractPages(pdf, pageIndices) {
-  let source;
-  try {
-    source = await PDFDocument.load(pdf);
-  } catch (error) {
-    throw new Error(
-      'The file could not be read. It may be corrupted or encrypted.',
-      {
-        cause: error,
-      },
-    );
-  }
-
-  if (pageIndices.length === 0) {
-    throw new Error('No pages selected.');
-  }
+  const source = await loadPdf(pdf);
 
   // Check every page number before copying, so we never return a half-built PDF
-  const pageCount = source.getPageCount();
-  for (const index of pageIndices) {
-    if (!Number.isInteger(index) || index < 0 || index >= pageCount) {
-      // index + 1 because users count pages from 1
-      throw new Error(
-        `Page ${index + 1} does not exist. The PDF has ${pageCount} pages.`,
-      );
-    }
-  }
+  checkPageIndices(pageIndices, source.getPageCount());
 
   const result = await PDFDocument.create();
 

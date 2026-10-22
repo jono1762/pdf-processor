@@ -1,4 +1,5 @@
-import { PDFDocument, degrees } from 'pdf-lib';
+import { degrees } from 'pdf-lib';
+import { loadPdf, checkPageIndices } from './validate.js';
 
 /**
  * Rotates the chosen pages clockwise, on top of any rotation they already have.
@@ -13,32 +14,11 @@ export async function rotatePages(pdf, pageIndices, angle) {
     throw new Error('Angle must be 90, 180 or 270 degrees.');
   }
 
-  let doc;
-  try {
-    doc = await PDFDocument.load(pdf);
-  } catch (error) {
-    throw new Error(
-      'The file could not be read. It may be corrupted or encrypted.',
-      {
-        cause: error,
-      },
-    );
-  }
-
-  if (pageIndices.length === 0) {
-    throw new Error('No pages selected.');
-  }
+  const doc = await loadPdf(pdf);
+  const pages = doc.getPages();
 
   // Check every page number before changing anything
-  const pages = doc.getPages();
-  for (const index of pageIndices) {
-    if (!Number.isInteger(index) || index < 0 || index >= pages.length) {
-      // index + 1 because users count pages from 1
-      throw new Error(
-        `Page ${index + 1} does not exist. The PDF has ${pages.length} pages.`,
-      );
-    }
-  }
+  checkPageIndices(pageIndices, pages.length);
 
   for (const index of pageIndices) {
     const page = pages[index];

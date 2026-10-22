@@ -39,4 +39,31 @@ describe('mergePdfs', () => {
       'File 2 could not be read',
     );
   });
+
+  it('uses file names in the error when they are given', async () => {
+    const good = await createTestPdf([100]);
+    const bad = new Uint8Array([1, 2, 3]);
+
+    await expect(mergePdfs([good, bad], ['a.pdf', 'b.pdf'])).rejects.toThrow(
+      'b.pdf could not be read',
+    );
+  });
+
+  it('lists every file that could not be read', async () => {
+    const good = await createTestPdf([100]);
+    const bad = new Uint8Array([1, 2, 3]);
+
+    // The second and third files are bad; the message must name both
+    await expect(
+      mergePdfs([good, bad, bad], ['a.pdf', 'b.pdf', 'c.pdf']),
+    ).rejects.toThrow('These files could not be read: b.pdf, c.pdf.');
+  });
+
+  it('falls back to file numbers when no names are given', async () => {
+    const bad = new Uint8Array([1, 2, 3]);
+
+    await expect(mergePdfs([bad, bad])).rejects.toThrow(
+      'These files could not be read: File 1, File 2.',
+    );
+  });
 });

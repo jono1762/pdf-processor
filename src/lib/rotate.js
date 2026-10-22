@@ -14,7 +14,9 @@ export async function rotatePages(pdf, pageIndices, angle) {
   for (const index of pageIndices) {
     const page = pages[index];
     // degrees() wraps a number in the angle object pdf-lib expects
-    page.setRotation(degrees(page.getRotation().angle + angle));
+    // % 360 wraps the total back into 0-359, e.g. 270 + 180 = 450 becomes 90
+    const total = (page.getRotation().angle + angle) % 360;
+    page.setRotation(degrees(total));
   }
 
   return doc.save();

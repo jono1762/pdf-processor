@@ -17,4 +17,23 @@ describe('rotatePages', () => {
 
     expect(await pageRotations(result)).toEqual([90, 0, 90]);
   });
+
+  it('adds to a rotation the page already has', async () => {
+    const pdf = await createTestPdf([100]);
+
+    const once = await rotatePages(pdf, [0], 90);
+    const twice = await rotatePages(once, [0], 90);
+
+    expect(await pageRotations(twice)).toEqual([180]);
+  });
+
+  it('wraps around after a full turn', async () => {
+    const pdf = await createTestPdf([100]);
+
+    const once = await rotatePages(pdf, [0], 270);
+    const twice = await rotatePages(once, [0], 180);
+
+    // 270 + 180 = 450, which is the same as 90
+    expect(await pageRotations(twice)).toEqual([90]);
+  });
 });

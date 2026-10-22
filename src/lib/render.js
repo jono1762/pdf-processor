@@ -9,11 +9,19 @@ pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
  * Opens a PDF for rendering. Open it once, then render as many pages as needed.
  * @param {Uint8Array} bytes - the PDF as bytes
  * @returns {Promise<import('pdfjs-dist').PDFDocumentProxy>}
+ * @throws {Error} if the file is corrupted, encrypted or not a PDF
  */
-export function openPdfForRendering(bytes) {
-  // PDF.js takes over the memory it is given, which would empty `bytes` for
-  // everyone else. Passing a copy (slice) keeps the original usable for merging.
-  return pdfjs.getDocument({ data: bytes.slice() }).promise;
+export async function openPdfForRendering(bytes) {
+  try {
+    // PDF.js takes over the memory it is given, which would empty `bytes` for
+    // everyone else. Passing a copy (slice) keeps the original usable for merging.
+    return await pdfjs.getDocument({ data: bytes.slice() }).promise;
+  } catch (error) {
+    throw new Error(
+      'The file could not be read. It may be corrupted or encrypted.',
+      { cause: error },
+    );
+  }
 }
 
 /**

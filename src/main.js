@@ -8,6 +8,8 @@ const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
 const message = document.querySelector('#message');
 const pageGrid = document.querySelector('#page-grid');
+const previewStatus = document.querySelector('#preview-status');
+const previewError = document.querySelector('#preview-error');
 
 // Roughly the width of one grid column, so thumbnails are drawn at about their shown size
 const THUMBNAIL_WIDTH = 320;
@@ -29,10 +31,17 @@ async function renderPageGrid() {
 
   const thisRender = ++latestRender;
   pageGrid.replaceChildren();
-  if (!file) return;
+  // The error belongs to the previewed file, so it clears only when that file changes
+  previewError.textContent = '';
+  if (!file) {
+    previewStatus.hidden = true;
+    return;
+  }
 
-  const pdfDoc = await openPdfForRendering(await readFileBytes(file));
+  previewStatus.hidden = false;
+  let pdfDoc;
   try {
+    pdfDoc = await openPdfForRendering(await readFileBytes(file));
     for (let i = 0; i < pdfDoc.numPages; i++) {
       const canvas = await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH);
       // The user changed the file list while we were drawing, so stop
@@ -44,9 +53,15 @@ async function renderPageGrid() {
       figure.append(canvas, caption);
       pageGrid.append(figure);
     }
+  } catch (error) {
+    // Only report errors for the current file, not one the user has moved on from
+    if (thisRender === latestRender) {
+      previewError.textContent = `Can't preview ${file.name}. ${error.message}`;
+    }
   } finally {
     // We only need the document while drawing; this frees its memory in PDF.js
-    pdfDoc.loadingTask.destroy();
+    pdfDoc?.loadingTask.destroy();
+    if (thisRender === latestRender) previewStatus.hidden = true;
   }
 }
 
@@ -89,6 +104,8 @@ fileInput.addEventListener('change', () => {
 
 mergeButton.addEventListener('click', async () => {
   message.textContent = '';
+  // A file that can't be previewed won't merge either, so the merge error covers it
+  previewError.textContent = '';
   try {
     // Promise.all reads all the files at once and keeps their order
     const pdfs = await Promise.all(files.map(readFileBytes));

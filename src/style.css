@@ -94,7 +94,8 @@ button:disabled {
   background: white;
 }
 
-#message {
+#message,
+#preview-error {
   color: #b91c1c;
   font-weight: 600;
 }

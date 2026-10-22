@@ -109,7 +109,9 @@ mergeButton.addEventListener('click', async () => {
   try {
     // Promise.all reads all the files at once and keeps their order
     const pdfs = await Promise.all(files.map(readFileBytes));
-    downloadPdf(await mergePdfs(pdfs), 'merged.pdf');
+    // The names let the error say which files are bad
+    const names = files.map((file) => file.name);
+    downloadPdf(await mergePdfs(pdfs, names), 'merged.pdf');
   } catch (error) {
     // Our own functions throw messages written for users, so show them as they are
     message.textContent = error.message;

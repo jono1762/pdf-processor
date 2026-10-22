@@ -19,6 +19,10 @@ All processing happens locally in the browser. There is no backend, and no file 
 
 Plain JavaScript, HTML and CSS, built with [Vite](https://vite.dev/). PDF handling uses [pdf-lib](https://pdf-lib.js.org/) and [PDF.js](https://mozilla.github.io/pdf.js/), and OCR uses [Tesseract.js](https://tesseract.projectnaptha.com/).
 
+## Disclaimer
+
+Only open PDFs you trust. This tool processes files locally, but it can't make a malicious file safe.
+
 ## Licence
 
 [MIT](LICENSE)

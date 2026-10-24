@@ -4,7 +4,7 @@ import {
   createSidewaysSample,
   createLargeSample,
 } from '../lib/samples.js';
-import { readFileBytes, downloadPdf } from './download.js';
+import { readFileBytes, downloadPdf, isPdfFile } from './download.js';
 import { state } from './state.js';
 import { createSortable } from './sortable.js';
 import { renderPageGrid, clearPreviewError } from './page-grid.js';
@@ -126,27 +126,44 @@ for (const sample of SAMPLES) {
   sampleButtons.append(button);
 }
 
-fileInput.addEventListener('change', async () => {
+// Adds files to the end of the list. Used by the file picker, and later by drops.
+async function addFiles(files) {
+  // The picker only offers PDFs, but a dropped file can be anything
+  const accepted = files.filter(isPdfFile);
+  const rejected = files.filter((file) => !isPdfFile(file));
+
+  if (accepted.length > 0) {
+    try {
+      // Read every file's bytes in parallel, keeping their order
+      const added = await Promise.all(
+        accepted.map(async (file) => ({
+          name: file.name,
+          bytes: await readFileBytes(file),
+        })),
+      );
+      // Adding to the list (not replacing it) lets the user add files in several rounds
+      state.files = [...state.files, ...added];
+      renderFileList();
+    } catch {
+      // No variable after catch, since we don't need the technical details here
+      message.textContent = 'A file could not be read from your device.';
+      return;
+    }
+  }
+
+  // Shown after renderFileList, which clears the message line
+  if (rejected.length > 0) {
+    const names = rejected.map((file) => file.name).join(', ');
+    message.textContent = `Only PDF files can be added: ${names}`;
+  }
+}
+
+fileInput.addEventListener('change', () => {
   // fileInput.files is not a real array; Array.from copies it into one
   const picked = Array.from(fileInput.files);
   // Clear the picker, otherwise choosing the same file again would not fire "change"
   fileInput.value = '';
-
-  try {
-    // Read every picked file's bytes in parallel, keeping their order
-    const added = await Promise.all(
-      picked.map(async (file) => ({
-        name: file.name,
-        bytes: await readFileBytes(file),
-      })),
-    );
-    // Adding to the list (not replacing it) lets the user pick files in several rounds
-    state.files = [...state.files, ...added];
-    renderFileList();
-  } catch {
-    // No variable after catch, since we don't need the technical details here
-    message.textContent = 'A file could not be read from your device.';
-  }
+  addFiles(picked);
 });
 
 mergeButton.addEventListener('click', async () => {

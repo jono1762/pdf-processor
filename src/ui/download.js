@@ -9,6 +9,17 @@ export async function readFileBytes(file) {
 }
 
 /**
+ * Says whether a file looks like a PDF. The picker only offers PDFs, but a dropped
+ * file can be anything.
+ * @param {{ name: string, type: string }} file - a File, or anything with these fields
+ * @returns {boolean}
+ */
+export function isPdfFile(file) {
+  // Some systems report an empty type, so a ".pdf" name also counts
+  return file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+}
+
+/**
  * Builds the name for an edited file, e.g. "report.pdf" becomes "report-edited.pdf".
  * @param {string} name - the original file name
  * @returns {string}

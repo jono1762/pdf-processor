@@ -30,6 +30,16 @@ export function editedFilename(name) {
 }
 
 /**
+ * Builds the name for a file made from some pages of another, e.g. "report.pdf"
+ * becomes "report-pages.pdf".
+ * @param {string} name - the original file name
+ * @returns {string}
+ */
+export function extractedFilename(name) {
+  return `${name.replace(/\.pdf$/i, '')}-pages.pdf`;
+}
+
+/**
  * Makes the browser download the given bytes as a PDF file.
  * @param {Uint8Array} bytes
  * @param {string} filename

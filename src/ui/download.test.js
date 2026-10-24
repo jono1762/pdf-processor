@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { editedFilename, isPdfFile } from './download.js';
+import { editedFilename, extractedFilename, isPdfFile } from './download.js';
 
 describe('editedFilename', () => {
   it('adds -edited before the .pdf extension', () => {
@@ -36,5 +36,19 @@ describe('isPdfFile', () => {
   it('rejects a name that only contains "pdf"', () => {
     expect(isPdfFile({ name: 'pdf.txt', type: '' })).toBe(false);
     expect(isPdfFile({ name: 'report.pdf.txt', type: '' })).toBe(false);
+  });
+});
+
+describe('extractedFilename', () => {
+  it('adds -pages before the .pdf extension', () => {
+    expect(extractedFilename('report.pdf')).toBe('report-pages.pdf');
+  });
+
+  it('ignores the case of the extension', () => {
+    expect(extractedFilename('Report.PDF')).toBe('Report-pages.pdf');
+  });
+
+  it('adds the extension when the name has none', () => {
+    expect(extractedFilename('notes')).toBe('notes-pages.pdf');
   });
 });

@@ -55,6 +55,12 @@ label {
   gap: 0.5rem;
 }
 
+#reorder-hint {
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
+  color: #52606d;
+}
+
 #file-list {
   list-style: none;
   padding: 0;

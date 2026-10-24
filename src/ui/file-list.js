@@ -14,6 +14,7 @@ const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
 const message = document.querySelector('#message');
 const sampleButtons = document.querySelector('#sample-buttons');
+const reorderHint = document.querySelector('#reorder-hint');
 
 // The "Try a sample" buttons: what each says, what its file is called, how to make it
 const SAMPLES = [
@@ -83,8 +84,9 @@ function renderFileList() {
       return item;
     }),
   );
-  // Merging needs at least two files
+  // Merging, and so choosing a merge order, needs at least two files
   mergeButton.disabled = state.files.length < 2;
+  reorderHint.hidden = state.files.length < 2;
   // An old error is about the old list, so clear it whenever the list changes
   message.textContent = '';
   renderPageGrid();

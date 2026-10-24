@@ -1,6 +1,6 @@
 name: CI
 
-# Runs on every push, to any branch
+# Runs on every push, to any branch. Pushes to main are also deployed.
 on: push
 
 # The checks only read the code, so the workflow gets read-only access
@@ -26,3 +26,29 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - run: npm run build
+
+      # Only main is published, so only main packages the built site (the dist folder)
+      - uses: actions/upload-pages-artifact@v5
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: dist
+
+  # Publishes the packaged site to GitHub Pages. Needs every check above to pass.
+  deploy:
+    needs: checks
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Deploying is the one thing that needs more than read-only access
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Never run two deploys at once, and let a running deploy finish
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

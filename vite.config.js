@@ -28,5 +28,9 @@ function contentSecurityPolicy() {
 }
 
 export default defineConfig({
+  // Relative paths, so the built site works from any folder. GitHub Pages serves it
+  // from /pdf-processor/, not from the root, and absolute paths like /assets/...
+  // would point at the wrong place.
+  base: './',
   plugins: [contentSecurityPolicy()],
 });

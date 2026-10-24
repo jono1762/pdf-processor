@@ -8,8 +8,9 @@ See [PLAN.md](PLAN.md) for the roadmap.
 
 ## Features
 
-- Merge, split, reorder, rotate and delete pages
-- OCR scanned PDFs into searchable PDFs
+- Merge PDFs, and drag them into the order you want
+- Select pages to rotate, delete, reorder (by dragging) or extract into a new file
+- Open files by choosing them or dropping them on the page
 - Built-in sample documents, so you can try it without your own files
 
 ## Privacy
@@ -18,7 +19,7 @@ All processing happens locally in the browser. There is no backend, and no file 
 
 ## Tech stack
 
-Plain JavaScript, HTML and CSS, built with [Vite](https://vite.dev/). PDF handling uses [pdf-lib](https://pdf-lib.js.org/) and [PDF.js](https://mozilla.github.io/pdf.js/), drag-and-drop reordering uses [SortableJS](https://sortablejs.github.io/Sortable/), and OCR uses [Tesseract.js](https://tesseract.projectnaptha.com/).
+Plain JavaScript, HTML and CSS, built with [Vite](https://vite.dev/). PDF handling uses [pdf-lib](https://pdf-lib.js.org/) and [PDF.js](https://mozilla.github.io/pdf.js/), and drag-and-drop reordering uses [SortableJS](https://sortablejs.github.io/Sortable/).
 
 ## Disclaimer
 

@@ -1,3 +1,4 @@
+import Sortable from 'sortablejs';
 import { mergePdfs } from '../lib/merge.js';
 import {
   createMultiPageSample,
@@ -44,7 +45,14 @@ function renderFileList() {
       const item = document.createElement('li');
       if (file === state.previewedFile) item.classList.add('previewed');
 
+      // Dragging starts from this handle only, so it never clashes with the buttons
+      const handle = document.createElement('span');
+      handle.className = 'drag-handle';
+      handle.textContent = '⠿';
+      handle.title = 'Drag to change the merge order';
+
       const name = document.createElement('span');
+      name.className = 'file-name';
       // textContent (not innerHTML) so a file name can never be treated as HTML
       name.textContent = file.name;
 
@@ -70,7 +78,7 @@ function renderFileList() {
       const actions = document.createElement('div');
       actions.className = 'file-actions';
       actions.append(previewButton, removeButton);
-      item.append(name, actions);
+      item.append(handle, name, actions);
 
       return item;
     }),
@@ -81,6 +89,26 @@ function renderFileList() {
   message.textContent = '';
   renderPageGrid();
 }
+
+// Lets the user drag rows to change the order files are merged in. SortableJS moves
+// the rows on screen; we then make state.files match and redraw the list.
+Sortable.create(fileList, {
+  animation: 150,
+  handle: '.drag-handle',
+  // Same dragging style as the page grid: a lifted copy that follows the pointer
+  forceFallback: true,
+  fallbackTolerance: 5,
+  onEnd({ oldIndex, newIndex }) {
+    if (oldIndex === newIndex) return;
+
+    // Take the dragged file out of the list and put it where it was dropped
+    const files = [...state.files];
+    const [moved] = files.splice(oldIndex, 1);
+    files.splice(newIndex, 0, moved);
+    state.files = files;
+    renderFileList();
+  },
+});
 
 for (const sample of SAMPLES) {
   const button = document.createElement('button');

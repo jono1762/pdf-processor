@@ -17,7 +17,7 @@ All processing happens locally in the browser. There is no backend, and no file 
 
 ## Tech stack
 
-Plain JavaScript, HTML and CSS, built with [Vite](https://vite.dev/). PDF handling uses [pdf-lib](https://pdf-lib.js.org/) and [PDF.js](https://mozilla.github.io/pdf.js/), and OCR uses [Tesseract.js](https://tesseract.projectnaptha.com/).
+Plain JavaScript, HTML and CSS, built with [Vite](https://vite.dev/). PDF handling uses [pdf-lib](https://pdf-lib.js.org/) and [PDF.js](https://mozilla.github.io/pdf.js/), drag-and-drop reordering uses [SortableJS](https://sortablejs.github.io/Sortable/), and OCR uses [Tesseract.js](https://tesseract.projectnaptha.com/).
 
 ## Disclaimer
 

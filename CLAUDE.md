@@ -18,6 +18,7 @@ I'm keeping to languages I already know: plain JavaScript, HTML and CSS. No Type
 - Vite as the dev server and build tool (vanilla JavaScript template)
 - `pdf-lib` for editing and creating PDFs
 - `pdfjs-dist` for rendering pages and thumbnails
+- `sortablejs` for drag-and-drop reordering of pages
 - `tesseract.js` for OCR, run in a Web Worker
 - Vitest for unit tests
 - Use modern JavaScript (ES modules). JSDoc comments on key functions are welcome where they make types clearer.
@@ -37,6 +38,7 @@ I'm learning while building, and I need to be able to explain every part of this
 - Prefer simple, readable code over clever code. Add brief comments where intent or JavaScript behaviour isn't obvious, since I'm still learning the language.
 - Don't call something done unless it builds, lints and tests pass.
 - When we make a significant design decision, add a short entry to the Decisions log in `PLAN.md`.
+- When a change adds or alters something users can see or do, check that the page text (the intro and meta description in `index.html`), `README.md` and `PLAN.md` still match, and update them in the same branch.
 
 ## Git workflow
 

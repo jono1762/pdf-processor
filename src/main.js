@@ -1,6 +1,6 @@
 import './style.css';
 import { mergePdfs } from './lib/merge.js';
-import { readFileBytes, downloadPdf } from './download.js';
+import { readFileBytes, downloadPdf, editedFilename } from './download.js';
 import { openPdfForRendering, renderPageThumbnail } from './lib/render.js';
 import { rotatePages } from './lib/rotate.js';
 import { deletePages } from './lib/delete.js';
@@ -12,6 +12,7 @@ const message = document.querySelector('#message');
 const pageGrid = document.querySelector('#page-grid');
 const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
+const downloadButton = document.querySelector('#download-button');
 const previewStatus = document.querySelector('#preview-status');
 const previewError = document.querySelector('#preview-error');
 
@@ -41,6 +42,8 @@ function updatePageTools() {
   rotateButton.disabled = noSelection;
   // A PDF can't have zero pages, so deleting every page is not allowed
   deleteButton.disabled = noSelection || selectedPages.size === pageCount;
+  // Downloading needs a file but no selection; wait for a running edit so we get its result
+  downloadButton.disabled = editing || !previewedFile;
 }
 
 // Shows a thumbnail of every page of the previewed file.
@@ -212,6 +215,10 @@ rotateButton.addEventListener('click', () => {
 
 deleteButton.addEventListener('click', () => {
   editSelectedPages('delete pages from', deletePages, false);
+});
+
+downloadButton.addEventListener('click', () => {
+  downloadPdf(previewedFile.bytes, editedFilename(previewedFile.name));
 });
 
 mergeButton.addEventListener('click', async () => {

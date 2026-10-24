@@ -9,6 +9,16 @@ export async function readFileBytes(file) {
 }
 
 /**
+ * Builds the name for an edited file, e.g. "report.pdf" becomes "report-edited.pdf".
+ * @param {string} name - the original file name
+ * @returns {string}
+ */
+export function editedFilename(name) {
+  // The regex removes a trailing ".pdf" in any letter case, so we don't get "report.pdf-edited.pdf"
+  return `${name.replace(/\.pdf$/i, '')}-edited.pdf`;
+}
+
+/**
  * Makes the browser download the given bytes as a PDF file.
  * @param {Uint8Array} bytes
  * @param {string} filename

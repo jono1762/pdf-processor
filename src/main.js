@@ -50,6 +50,12 @@ const sortable = Sortable.create(pageGrid, {
   forceFallback: true,
   // Moving less than this many pixels counts as a click, so selecting still works
   fallbackTolerance: 5,
+  onStart({ item }) {
+    // The floating copy under the pointer is made with cloneNode, which copies a
+    // canvas element but not what is drawn on it. Draw the thumbnail onto the copy.
+    const ghostCanvas = Sortable.ghost?.querySelector('canvas');
+    ghostCanvas?.getContext('2d').drawImage(item.querySelector('canvas'), 0, 0);
+  },
   onEnd({ oldIndex, newIndex }) {
     if (oldIndex === newIndex) return;
 

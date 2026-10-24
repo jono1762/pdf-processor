@@ -104,7 +104,9 @@ button:disabled {
 }
 
 /* Each thumbnail is a button; reset the default button look so only the page shows */
-#page-grid .page-thumb {
+/* Not scoped to #page-grid: the copy that follows the pointer while dragging is
+   added to <body>, so it must match these rules too */
+.page-thumb {
   padding: 0.25rem;
   border: 2px solid transparent;
   background: none;
@@ -113,14 +115,31 @@ button:disabled {
   color: #52606d;
 }
 
+/* Pages can be dragged to reorder them */
+.page-thumb {
+  cursor: grab;
+}
+
+/* The gap where the dragged page will land: faded, so it reads as a placeholder */
+.sortable-ghost {
+  opacity: 0.4;
+}
+
+/* The copy that follows the pointer: lifted with a shadow */
+.sortable-fallback {
+  background: white;
+  box-shadow: 0 0.5rem 1.5rem rgba(31, 41, 51, 0.3);
+  cursor: grabbing;
+}
+
 /* Highlight the pages the user has selected */
-#page-grid .page-thumb[aria-pressed='true'] {
+.page-thumb[aria-pressed='true'] {
   border-color: #2563eb;
   background: #bfdbfe;
 }
 
 /* Fill the column; height: auto keeps the page's proportions */
-#page-grid canvas {
+.page-thumb canvas {
   display: block;
   width: 100%;
   height: auto;
@@ -128,7 +147,7 @@ button:disabled {
   background: white;
 }
 
-#page-grid .page-thumb span {
+.page-thumb span {
   display: block;
   margin-top: 0.25rem;
 }

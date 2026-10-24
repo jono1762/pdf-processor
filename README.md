@@ -8,7 +8,7 @@ See [PLAN.md](PLAN.md) for the roadmap.
 
 ## Features
 
-- Merge PDFs, and drag them into the order you want
+- Merge the PDFs you choose, in the order you want (drag to reorder)
 - Select pages to rotate, delete, reorder (by dragging) or extract into a new file
 - Open files by choosing them or dropping them on the page
 - Built-in sample documents, so you can try it without your own files

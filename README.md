@@ -4,6 +4,8 @@ A free, open-source PDF toolkit that runs entirely in your browser.
 
 Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
+**Live demo:** https://jono1762.github.io/pdf-processor/ (tested in recent Chrome and Edge)
+
 See [PLAN.md](PLAN.md) for the roadmap.
 
 ## Features

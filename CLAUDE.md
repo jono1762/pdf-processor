@@ -50,6 +50,7 @@ I'm learning while building, and I need to be able to explain every part of this
 ## Code conventions
 
 - Keep PDF logic as plain functions in `src/lib/`, separate from the UI code, so it can be unit tested without the UI.
+- Code that touches the page (the DOM) lives in `src/ui/`: `file-list.js` (picker, list, merge), `page-grid.js` (thumbnails, selection, page tools, dragging), `download.js` (browser file helpers) and `state.js` (data shared between UI modules). `src/main.js` only imports.
 - Heavy work (OCR, rendering many pages) must not block the main thread.
 - Fail visibly: encrypted, corrupted or very large files should show a clear message, never crash or fail silently.
 

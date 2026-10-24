@@ -1,4 +1,3 @@
-import Sortable from 'sortablejs';
 import { mergePdfs } from '../lib/merge.js';
 import {
   createMultiPageSample,
@@ -7,6 +6,7 @@ import {
 } from '../lib/samples.js';
 import { readFileBytes, downloadPdf } from './download.js';
 import { state } from './state.js';
+import { createSortable } from './sortable.js';
 import { renderPageGrid, clearPreviewError } from './page-grid.js';
 
 const fileInput = document.querySelector('#file-input');
@@ -90,14 +90,10 @@ function renderFileList() {
   renderPageGrid();
 }
 
-// Lets the user drag rows to change the order files are merged in. SortableJS moves
-// the rows on screen; we then make state.files match and redraw the list.
-Sortable.create(fileList, {
-  animation: 150,
+// Lets the user drag rows to change the order files are merged in. We make
+// state.files match the new order and redraw the list.
+createSortable(fileList, {
   handle: '.drag-handle',
-  // Same dragging style as the page grid: a lifted copy that follows the pointer
-  forceFallback: true,
-  fallbackTolerance: 5,
   onEnd({ oldIndex, newIndex }) {
     if (oldIndex === newIndex) return;
 

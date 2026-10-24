@@ -5,6 +5,7 @@ import { reorderPages } from '../lib/reorder.js';
 import Sortable from 'sortablejs';
 import { downloadPdf, editedFilename } from './download.js';
 import { state } from './state.js';
+import { createSortable } from './sortable.js';
 
 const pageGrid = document.querySelector('#page-grid');
 const selectAllButton = document.querySelector('#select-all-button');
@@ -30,15 +31,9 @@ let pageCount = 0;
 // True while the thumbnails are still being drawn
 let drawing = false;
 
-// Lets the user drag thumbnails to reorder them. SortableJS moves the elements on
-// screen; our job is to make the PDF match once a drag ends.
-const sortable = Sortable.create(pageGrid, {
-  animation: 150,
-  // The browser's own drag support doesn't work on <button> elements in Firefox,
-  // so SortableJS does the dragging itself
-  forceFallback: true,
-  // Moving less than this many pixels counts as a click, so selecting still works
-  fallbackTolerance: 5,
+// Lets the user drag thumbnails to reorder them. Our job is to make the PDF match
+// once a drag ends.
+const sortable = createSortable(pageGrid, {
   onStart({ item }) {
     // The floating copy under the pointer is made with cloneNode, which copies a
     // canvas element but not what is drawn on it. Draw the thumbnail onto the copy.

@@ -6,7 +6,7 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 
 **Pitch:** Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
-## v1a: Core page editor
+## v1: Core page editor
 
 - Open one or more PDFs (file picker and drag-and-drop)
 - Page grid with thumbnails
@@ -15,35 +15,24 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 - Download the result
 - "Try a sample" buttons using bundled sample documents
 
-## v1b: OCR for scans
+**v1 is done when:**
+
+- There is a live deployed link
+- It works in recent Chrome and Edge (Firefox and Safari are checked later, in v3)
+- Core PDF operations have unit tests
+- The DevTools Network tab shows no file data being sent anywhere
+
+## v2: OCR for scans
 
 - Detect pages with no text layer and offer OCR only for those
 - Add an invisible text layer aligned with the page so text can be selected and searched
 - Progress indicator and cancel button for OCR jobs
 
-**v1 is done when:**
+## v3: Polish and hardening
 
-- There is a live deployed link
-- It works in recent Chrome, Firefox and Safari
-- Core PDF operations have unit tests
-- The DevTools Network tab shows no file data being sent anywhere
-
-## v2: Images to clean PDF (tentative)
-
-Value here is engineering depth rather than a product gap, since phone scanner apps already do much of this.
-
-- Import photos of pages
-- Auto-detect page edges, crop and straighten (perspective correction)
-- Clean up: contrast, shadow removal, whitened background
-- Compress to a target file size (e.g. "under 10 MB")
-- Sensible default download names based on the original file (e.g. `report-merged.pdf`, `report-ocr.pdf`)
-
-## v3: Polish and stretch goals
-
-- Optional handwriting recognition (TrOCR via Transformers.js), downloaded only when the user asks for it
-- End-to-end tests
+- End-to-end tests, run in Chromium, Firefox and WebKit, which also covers the Firefox and Safari check
 - Performance on large files (hundreds of pages)
-- Accessibility pass (keyboard use, screen reader labels)
+- Accessibility pass (keyboard use, screen reader labels, keyboard reordering)
 - README with demo GIF, feature list and key design decisions
 
 ## Sample documents
@@ -71,6 +60,6 @@ _Add an entry for each significant decision: decision, reason, alternatives cons
 - **File list holds `{ name, bytes }`, not `File` objects.** A `File` can't be edited, and page edits (rotate, delete) produce new bytes. Reading the bytes once on add and replacing them after each edit means merge, preview and download always use the current version. Alternative: keep per-page rotation and deletion as state and apply it all at download time, rejected as more complicated. Trade-off: every file stays in memory as bytes, worth revisiting for large files.
 - **SortableJS for drag-and-drop page reordering.** It handles touch screens, animation and autoscroll, and works on plain DOM elements without a framework. The page thumbnails are `<button>` elements, and the browser's built-in drag-and-drop doesn't work on buttons in Firefox, so SortableJS is set to do the dragging itself (`forceFallback`). Alternatives: the browser's drag-and-drop API (no dependency, but no touch support and the Firefox button problem), and custom pointer-event code (works everywhere, but much more code to write and explain). Trade-off: one more dependency, about 41 kB added to the bundle.
 - **UI split into modules sharing one `state` object.** `main.js` had grown to over 300 lines doing five jobs. It is now `src/ui/file-list.js`, `src/ui/page-grid.js` and `src/ui/state.js`, with PDF logic staying in `src/lib/`. Modules can't reassign variables they import, so the shared data (`files`, `previewedFile`) lives in an exported object whose properties they change. The file list imports the grid, and the grid asks the list to redraw through a callback the list registers, so there are no circular imports. Alternatives: events between modules (more indirection than this size needs) and a class holding everything (nothing else here uses classes).
-- **Sample PDFs are generated in the browser, not committed.** The "Try a sample" buttons build their PDFs with `pdf-lib` when clicked, using functions in `src/lib/samples.js` that have unit tests. No binary files are stored in the repo, the content is always original, and the large sample doesn't bloat the download. Alternative: commit pre-made PDFs in a samples folder, which can look more realistic but adds binary files and still needs a generator script. The scanned-page sample for OCR will be added with v1b.
+- **Sample PDFs are generated in the browser, not committed.** The "Try a sample" buttons build their PDFs with `pdf-lib` when clicked, using functions in `src/lib/samples.js` that have unit tests. No binary files are stored in the repo, the content is always original, and the large sample doesn't bloat the download. Alternative: commit pre-made PDFs in a samples folder, which can look more realistic but adds binary files and still needs a generator script. The scanned-page sample for OCR will be added with v2.
 - **Extracting pages makes a new file in the list instead of downloading.** "Extract selected" adds the chosen pages as `<name>-pages-N.pdf`, grouped under the file they came from, and leaves the original alone. The result can be previewed, edited, reordered, merged or downloaded like any other file, and several ranges can be taken from one source. Alternatives: downloading the pages straight away (simpler, but the result can't be used further in the app) and a "keep only the selected pages" button (destroys the original, and there is no undo). Trade-off: extracted pages stay in memory as another file.
 - **Merge uses the ticked files, and extracted files start unticked.** Each file in the list has a checkbox, and Merge combines only the ticked ones, in list order. An extracted file contains pages that are also in its source, so ticking it by default would make a plain "merge all" repeat those pages; the Merge button's count ("Merge 2 of 4 files") shows what is included. The flag is stored on the file as `excludedFromMerge`, so a file without it counts as included. Alternative: select rows by clicking them, rejected because it clashes with the highlight that marks the previewed file.

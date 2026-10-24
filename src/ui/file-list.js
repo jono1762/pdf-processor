@@ -7,7 +7,11 @@ import {
 import { readFileBytes, downloadPdf, isPdfFile } from './download.js';
 import { state } from './state.js';
 import { createSortable } from './sortable.js';
-import { renderPageGrid, clearPreviewError } from './page-grid.js';
+import {
+  renderPageGrid,
+  clearPreviewError,
+  setFileListRedraw,
+} from './page-grid.js';
 
 const fileInput = document.querySelector('#file-input');
 const dropArea = document.querySelector('#drop-area');
@@ -126,6 +130,9 @@ for (const sample of SAMPLES) {
   });
   sampleButtons.append(button);
 }
+
+// The page grid adds files too (extracted pages), so it needs a way to redraw the list
+setFileListRedraw(renderFileList);
 
 // Adds files to the end of the list. Used by the file picker, and later by drops.
 async function addFiles(files) {

@@ -1,9 +1,10 @@
 import { openPdfForRendering, renderPageThumbnail } from '../lib/render.js';
 import { rotatePages } from '../lib/rotate.js';
 import { deletePages } from '../lib/delete.js';
+import { extractPages } from '../lib/extract.js';
 import { reorderPages } from '../lib/reorder.js';
 import Sortable from 'sortablejs';
-import { downloadPdf, editedFilename } from './download.js';
+import { downloadPdf, editedFilename, extractedFilename } from './download.js';
 import { state } from './state.js';
 import { createSortable } from './sortable.js';
 
@@ -11,6 +12,7 @@ const pageGrid = document.querySelector('#page-grid');
 const selectAllButton = document.querySelector('#select-all-button');
 const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
+const extractButton = document.querySelector('#extract-button');
 const downloadButton = document.querySelector('#download-button');
 const previewStatus = document.querySelector('#preview-status');
 const previewError = document.querySelector('#preview-error');
@@ -69,6 +71,7 @@ function updatePageTools() {
   rotateButton.disabled = noSelection;
   // A PDF can't have zero pages, so deleting every page is not allowed
   deleteButton.disabled = noSelection || selectedPages.size === pageCount;
+  extractButton.disabled = noSelection;
   // Downloading needs a file but no selection; wait for a running edit so we get its result
   downloadButton.disabled = editing || !state.previewedFile;
   // Dragging needs the full grid (the page numbers must match) and no edit running
@@ -201,12 +204,46 @@ deleteButton.addEventListener('click', () => {
   editPreviewedFile('delete pages from', deletePages, false);
 });
 
+extractButton.addEventListener('click', async () => {
+  const file = state.previewedFile;
+  editing = true;
+  updatePageTools();
+  try {
+    // A Set has no click order, so sort: the new file keeps the original page order
+    const pages = [...selectedPages].sort((a, b) => a - b);
+    const extracted = {
+      name: extractedFilename(file.name),
+      bytes: await extractPages(file.bytes, pages),
+    };
+    // Put the new file right after the one it came from. The original is untouched.
+    const after = state.files.indexOf(file) + 1;
+    state.files = [
+      ...state.files.slice(0, after),
+      extracted,
+      ...state.files.slice(after),
+    ];
+    redrawFileList();
+  } catch (error) {
+    previewError.textContent = `Can't extract pages from ${file.name}. ${error.message}`;
+  } finally {
+    editing = false;
+    updatePageTools();
+  }
+});
+
 downloadButton.addEventListener('click', () => {
   downloadPdf(
     state.previewedFile.bytes,
     editedFilename(state.previewedFile.name),
   );
 });
+
+// Set by file-list.js. It lets the grid ask for the file list to be redrawn without
+// importing file-list.js, which already imports this file.
+let redrawFileList = () => {};
+export function setFileListRedraw(redraw) {
+  redrawFileList = redraw;
+}
 
 // Lets other modules clear the preview error, e.g. when merging starts
 export function clearPreviewError() {

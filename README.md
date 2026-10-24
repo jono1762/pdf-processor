@@ -15,7 +15,7 @@ See [PLAN.md](PLAN.md) for the roadmap.
 
 ## Privacy
 
-All processing happens locally in the browser. There is no backend, and no file data is sent anywhere.
+All processing happens locally in the browser. There is no backend, and no file data is sent anywhere. A Content-Security-Policy makes the browser block requests to any other site, so this is enforced and not only promised. You can check it yourself: open DevTools, go to the Network tab, and use the app. The only requests are the page's own files.
 
 ## Tech stack
 

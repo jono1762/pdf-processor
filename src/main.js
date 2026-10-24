@@ -10,6 +10,7 @@ const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
 const message = document.querySelector('#message');
 const pageGrid = document.querySelector('#page-grid');
+const selectAllButton = document.querySelector('#select-all-button');
 const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
 const downloadButton = document.querySelector('#download-button');
@@ -38,6 +39,11 @@ let pageCount = 0;
 
 // Page tools only make sense with a previewed file, selected pages and no edit running
 function updatePageTools() {
+  // One button for both jobs: it clears the selection once every page is selected
+  const allSelected = pageCount > 0 && selectedPages.size === pageCount;
+  selectAllButton.textContent = allSelected ? 'Clear selection' : 'Select all';
+  selectAllButton.disabled = editing || pageCount === 0;
+
   const noSelection = editing || !previewedFile || selectedPages.size === 0;
   rotateButton.disabled = noSelection;
   // A PDF can't have zero pages, so deleting every page is not allowed
@@ -204,6 +210,20 @@ async function editSelectedPages(verb, edit, keepSelection) {
     updatePageTools();
   }
 }
+
+selectAllButton.addEventListener('click', () => {
+  // Anything less than every page selected means "select all"; otherwise clear
+  const selectEverything = selectedPages.size < pageCount;
+  selectedPages.clear();
+  if (selectEverything) {
+    for (let i = 0; i < pageCount; i++) selectedPages.add(i);
+  }
+  // Thumbnails are in page order, so a thumbnail's position in the list is its page number
+  pageGrid.querySelectorAll('.page-thumb').forEach((thumb, i) => {
+    thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
+  });
+  updatePageTools();
+});
 
 rotateButton.addEventListener('click', () => {
   editSelectedPages(

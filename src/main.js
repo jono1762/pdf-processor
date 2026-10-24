@@ -24,6 +24,8 @@ let previewedFile = null;
 let drawnFile = null;
 // Counts grid renders, so a slow older render can tell it has been replaced
 let latestRender = 0;
+// Zero-based numbers of the pages the user has selected in the grid
+const selectedPages = new Set();
 
 // Shows a thumbnail of every page of the previewed file
 async function renderPageGrid() {
@@ -31,6 +33,8 @@ async function renderPageGrid() {
   // The grid already shows this file, so skip the redraw
   if (file === drawnFile) return;
   drawnFile = file;
+  // Page numbers belong to one file, so a different file starts with nothing selected
+  selectedPages.clear();
 
   const thisRender = ++latestRender;
   pageGrid.replaceChildren();
@@ -50,11 +54,27 @@ async function renderPageGrid() {
       // The user changed the file list while we were drawing, so stop
       if (thisRender !== latestRender) return;
 
-      const figure = document.createElement('figure');
-      const caption = document.createElement('figcaption');
+      // A real button, so pages can be selected with the keyboard as well as the mouse
+      const thumb = document.createElement('button');
+      thumb.type = 'button';
+      thumb.className = 'page-thumb';
+      thumb.setAttribute('aria-pressed', 'false');
+
+      const caption = document.createElement('span');
       caption.textContent = `Page ${i + 1}`;
-      figure.append(canvas, caption);
-      pageGrid.append(figure);
+      thumb.append(canvas, caption);
+
+      thumb.addEventListener('click', () => {
+        // Selected pages: click once to add, click again to remove
+        if (selectedPages.has(i)) {
+          selectedPages.delete(i);
+        } else {
+          selectedPages.add(i);
+        }
+        // aria-pressed tells screen readers the state; the CSS uses it for the highlight
+        thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
+      });
+      pageGrid.append(thumb);
     }
   } catch (error) {
     // Only report errors for the current file, not one the user has moved on from

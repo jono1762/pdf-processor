@@ -1,0 +1,28 @@
+name: CI
+
+# Runs on every push, to any branch
+on: push
+
+# The checks only read the code, so the workflow gets read-only access
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Reads the Node version from .nvmrc, so CI uses the same one as development
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Installs exactly what package-lock.json says, and fails if it is out of date
+      - run: npm ci
+
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build

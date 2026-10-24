@@ -6,6 +6,7 @@ import { rotatePages } from './lib/rotate.js';
 import { deletePages } from './lib/delete.js';
 import { reorderPages } from './lib/reorder.js';
 import Sortable from 'sortablejs';
+import { state } from './ui/state.js';
 
 const fileInput = document.querySelector('#file-input');
 const fileList = document.querySelector('#file-list');
@@ -22,12 +23,6 @@ const previewError = document.querySelector('#preview-error');
 // Roughly the width of one grid column, so thumbnails are drawn at about their shown size
 const THUMBNAIL_WIDTH = 320;
 
-// The PDFs the user has chosen, in order, as { name, bytes }. The bytes are read
-// once when a file is added; edits will replace them. Merging uses this list.
-let files = [];
-
-// The file the user wants previewed. Stays put when other files are added or removed.
-let previewedFile = null;
 // The file whose pages are actually drawn in the grid right now
 let drawnFile = null;
 // Counts grid renders, so a slow older render can tell it has been replaced
@@ -80,12 +75,13 @@ function updatePageTools() {
   selectAllButton.textContent = allSelected ? 'Clear selection' : 'Select all';
   selectAllButton.disabled = editing || pageCount === 0;
 
-  const noSelection = editing || !previewedFile || selectedPages.size === 0;
+  const noSelection =
+    editing || !state.previewedFile || selectedPages.size === 0;
   rotateButton.disabled = noSelection;
   // A PDF can't have zero pages, so deleting every page is not allowed
   deleteButton.disabled = noSelection || selectedPages.size === pageCount;
   // Downloading needs a file but no selection; wait for a running edit so we get its result
-  downloadButton.disabled = editing || !previewedFile;
+  downloadButton.disabled = editing || !state.previewedFile;
   // Dragging needs the full grid (the page numbers must match) and no edit running
   sortable.option('disabled', editing || drawing);
 }
@@ -93,7 +89,7 @@ function updatePageTools() {
 // Shows a thumbnail of every page of the previewed file.
 // `force` redraws even if the file is the same, e.g. after its pages were edited.
 async function renderPageGrid(force = false) {
-  const file = previewedFile;
+  const file = state.previewedFile;
   // The grid already shows this file, so skip the redraw
   if (file === drawnFile && !force) return;
   // Page numbers belong to one file, so a different file starts with nothing selected
@@ -166,15 +162,16 @@ async function renderPageGrid(force = false) {
   }
 }
 
-// Rebuilds the visible list from the `files` array
+// Rebuilds the visible list from `state.files`
 function renderFileList() {
   // If the previewed file is gone (or nothing was chosen yet), use the first file
-  if (!files.includes(previewedFile)) previewedFile = files[0] ?? null;
+  if (!state.files.includes(state.previewedFile))
+    state.previewedFile = state.files[0] ?? null;
 
   fileList.replaceChildren(
-    ...files.map((file) => {
+    ...state.files.map((file) => {
       const item = document.createElement('li');
-      if (file === previewedFile) item.classList.add('previewed');
+      if (file === state.previewedFile) item.classList.add('previewed');
 
       const name = document.createElement('span');
       // textContent (not innerHTML) so a file name can never be treated as HTML
@@ -184,9 +181,9 @@ function renderFileList() {
       previewButton.type = 'button';
       previewButton.textContent = 'Preview';
       // The file already being previewed has nothing to switch to
-      previewButton.disabled = file === previewedFile;
+      previewButton.disabled = file === state.previewedFile;
       previewButton.addEventListener('click', () => {
-        previewedFile = file;
+        state.previewedFile = file;
         renderFileList();
       });
 
@@ -195,7 +192,7 @@ function renderFileList() {
       removeButton.textContent = 'Remove';
       removeButton.addEventListener('click', () => {
         // Keep every file except this one, then redraw
-        files = files.filter((other) => other !== file);
+        state.files = state.files.filter((other) => other !== file);
         renderFileList();
       });
 
@@ -208,7 +205,7 @@ function renderFileList() {
     }),
   );
   // Merging needs at least two files
-  mergeButton.disabled = files.length < 2;
+  mergeButton.disabled = state.files.length < 2;
   // An old error is about the old list, so clear it whenever the list changes
   message.textContent = '';
   renderPageGrid();
@@ -229,7 +226,7 @@ fileInput.addEventListener('change', async () => {
       })),
     );
     // Adding to the list (not replacing it) lets the user pick files in several rounds
-    files = [...files, ...added];
+    state.files = [...state.files, ...added];
     renderFileList();
   } catch {
     // No variable after catch, since we don't need the technical details here
@@ -242,7 +239,7 @@ fileInput.addEventListener('change', async () => {
 // `keepSelection` is for edits that don't change page numbers (rotating); after
 // deleting or reordering, the old numbers are wrong.
 async function editPreviewedFile(verb, edit, keepSelection) {
-  const file = previewedFile;
+  const file = state.previewedFile;
   editing = true;
   updatePageTools();
   try {
@@ -288,7 +285,10 @@ deleteButton.addEventListener('click', () => {
 });
 
 downloadButton.addEventListener('click', () => {
-  downloadPdf(previewedFile.bytes, editedFilename(previewedFile.name));
+  downloadPdf(
+    state.previewedFile.bytes,
+    editedFilename(state.previewedFile.name),
+  );
 });
 
 mergeButton.addEventListener('click', async () => {
@@ -296,9 +296,9 @@ mergeButton.addEventListener('click', async () => {
   // A file that can't be previewed won't merge either, so the merge error covers it
   previewError.textContent = '';
   try {
-    const pdfs = files.map((file) => file.bytes);
+    const pdfs = state.files.map((file) => file.bytes);
     // The names let the error say which files are bad
-    const names = files.map((file) => file.name);
+    const names = state.files.map((file) => file.name);
     downloadPdf(await mergePdfs(pdfs, names), 'merged.pdf');
   } catch (error) {
     // Our own functions throw messages written for users, so show them as they are

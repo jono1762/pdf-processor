@@ -67,3 +67,4 @@ I'm learning while building, and I need to be able to explain every part of this
 - `npm test`
 - `npm run lint`
 - `npm run format`
+- `npm run format:check`

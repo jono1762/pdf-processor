@@ -14,7 +14,8 @@ const previewError = document.querySelector('#preview-error');
 // Roughly the width of one grid column, so thumbnails are drawn at about their shown size
 const THUMBNAIL_WIDTH = 320;
 
-// The files the user has chosen, in order. Merging uses this list.
+// The PDFs the user has chosen, in order, as { name, bytes }. The bytes are read
+// once when a file is added; edits will replace them. Merging uses this list.
 let files = [];
 
 // The file the user wants previewed. Stays put when other files are added or removed.
@@ -43,7 +44,7 @@ async function renderPageGrid() {
   previewStatus.hidden = false;
   let pdfDoc;
   try {
-    pdfDoc = await openPdfForRendering(await readFileBytes(file));
+    pdfDoc = await openPdfForRendering(file.bytes);
     for (let i = 0; i < pdfDoc.numPages; i++) {
       const canvas = await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH);
       // The user changed the file list while we were drawing, so stop
@@ -115,13 +116,27 @@ function renderFileList() {
   renderPageGrid();
 }
 
-fileInput.addEventListener('change', () => {
-  // fileInput.files is not a real array; Array.from copies it into one.
-  // Adding to the list (not replacing it) lets the user pick files in several rounds.
-  files = [...files, ...Array.from(fileInput.files)];
+fileInput.addEventListener('change', async () => {
+  // fileInput.files is not a real array; Array.from copies it into one
+  const picked = Array.from(fileInput.files);
   // Clear the picker, otherwise choosing the same file again would not fire "change"
   fileInput.value = '';
-  renderFileList();
+
+  try {
+    // Read every picked file's bytes in parallel, keeping their order
+    const added = await Promise.all(
+      picked.map(async (file) => ({
+        name: file.name,
+        bytes: await readFileBytes(file),
+      })),
+    );
+    // Adding to the list (not replacing it) lets the user pick files in several rounds
+    files = [...files, ...added];
+    renderFileList();
+  } catch {
+    // No variable after catch, since we don't need the technical details here
+    message.textContent = 'A file could not be read from your device.';
+  }
 });
 
 mergeButton.addEventListener('click', async () => {
@@ -129,8 +144,7 @@ mergeButton.addEventListener('click', async () => {
   // A file that can't be previewed won't merge either, so the merge error covers it
   previewError.textContent = '';
   try {
-    // Promise.all reads all the files at once and keeps their order
-    const pdfs = await Promise.all(files.map(readFileBytes));
+    const pdfs = files.map((file) => file.bytes);
     // The names let the error say which files are bad
     const names = files.map((file) => file.name);
     downloadPdf(await mergePdfs(pdfs, names), 'merged.pdf');

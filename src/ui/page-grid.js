@@ -211,16 +211,29 @@ extractButton.addEventListener('click', async () => {
   try {
     // A Set has no click order, so sort: the new file keeps the original page order
     const pages = [...selectedPages].sort((a, b) => a - b);
+    const bytes = await extractPages(file.bytes, pages);
+
+    // Each file counts its extractions, and the count only goes up. So removing
+    // "report-pages-1.pdf" never leads to a second file with the same name.
+    file.extractionCount = (file.extractionCount ?? 0) + 1;
     const extracted = {
-      name: extractedFilename(file.name),
-      bytes: await extractPages(file.bytes, pages),
+      name: extractedFilename(file.name, file.extractionCount),
+      bytes,
+      // Remembers the source, so later extractions can be grouped under it
+      extractedFrom: file,
     };
-    // Put the new file right after the one it came from. The original is untouched.
-    const after = state.files.indexOf(file) + 1;
+
+    // Go under the last extraction from this file, or under the file itself if
+    // there are none yet. (If the file was removed meanwhile, go to the end.)
+    let last = state.files.indexOf(file);
+    state.files.forEach((other, index) => {
+      if (other.extractedFrom === file) last = index;
+    });
+    const insertAt = last === -1 ? state.files.length : last + 1;
     state.files = [
-      ...state.files.slice(0, after),
+      ...state.files.slice(0, insertAt),
       extracted,
-      ...state.files.slice(after),
+      ...state.files.slice(insertAt),
     ];
     redrawFileList();
   } catch (error) {

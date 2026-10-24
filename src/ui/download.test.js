@@ -40,15 +40,16 @@ describe('isPdfFile', () => {
 });
 
 describe('extractedFilename', () => {
-  it('adds -pages before the .pdf extension', () => {
-    expect(extractedFilename('report.pdf')).toBe('report-pages.pdf');
+  it('adds -pages and the number before the .pdf extension', () => {
+    expect(extractedFilename('report.pdf', 1)).toBe('report-pages-1.pdf');
+    expect(extractedFilename('report.pdf', 12)).toBe('report-pages-12.pdf');
   });
 
   it('ignores the case of the extension', () => {
-    expect(extractedFilename('Report.PDF')).toBe('Report-pages.pdf');
+    expect(extractedFilename('Report.PDF', 2)).toBe('Report-pages-2.pdf');
   });
 
   it('adds the extension when the name has none', () => {
-    expect(extractedFilename('notes')).toBe('notes-pages.pdf');
+    expect(extractedFilename('notes', 1)).toBe('notes-pages-1.pdf');
   });
 });

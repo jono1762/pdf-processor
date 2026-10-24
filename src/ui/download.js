@@ -31,12 +31,13 @@ export function editedFilename(name) {
 
 /**
  * Builds the name for a file made from some pages of another, e.g. "report.pdf"
- * becomes "report-pages.pdf".
+ * and 2 give "report-pages-2.pdf".
  * @param {string} name - the original file name
+ * @param {number} number - which extraction from that file this is
  * @returns {string}
  */
-export function extractedFilename(name) {
-  return `${name.replace(/\.pdf$/i, '')}-pages.pdf`;
+export function extractedFilename(name, number) {
+  return `${name.replace(/\.pdf$/i, '')}-pages-${number}.pdf`;
 }
 
 /**

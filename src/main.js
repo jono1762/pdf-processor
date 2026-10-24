@@ -2,12 +2,14 @@ import './style.css';
 import { mergePdfs } from './lib/merge.js';
 import { readFileBytes, downloadPdf } from './download.js';
 import { openPdfForRendering, renderPageThumbnail } from './lib/render.js';
+import { rotatePages } from './lib/rotate.js';
 
 const fileInput = document.querySelector('#file-input');
 const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
 const message = document.querySelector('#message');
 const pageGrid = document.querySelector('#page-grid');
+const rotateButton = document.querySelector('#rotate-button');
 const previewStatus = document.querySelector('#preview-status');
 const previewError = document.querySelector('#preview-error');
 
@@ -26,15 +28,24 @@ let drawnFile = null;
 let latestRender = 0;
 // Zero-based numbers of the pages the user has selected in the grid
 const selectedPages = new Set();
+// True while a page edit is running, so a second click can't start before it ends
+let editing = false;
 
-// Shows a thumbnail of every page of the previewed file
-async function renderPageGrid() {
+// Page tools only make sense with a previewed file, selected pages and no edit running
+function updatePageTools() {
+  rotateButton.disabled = editing || !previewedFile || selectedPages.size === 0;
+}
+
+// Shows a thumbnail of every page of the previewed file.
+// `force` redraws even if the file is the same, e.g. after its pages were edited.
+async function renderPageGrid(force = false) {
   const file = previewedFile;
   // The grid already shows this file, so skip the redraw
-  if (file === drawnFile) return;
-  drawnFile = file;
+  if (file === drawnFile && !force) return;
   // Page numbers belong to one file, so a different file starts with nothing selected
-  selectedPages.clear();
+  if (file !== drawnFile) selectedPages.clear();
+  drawnFile = file;
+  updatePageTools();
 
   const thisRender = ++latestRender;
   pageGrid.replaceChildren();
@@ -58,7 +69,8 @@ async function renderPageGrid() {
       const thumb = document.createElement('button');
       thumb.type = 'button';
       thumb.className = 'page-thumb';
-      thumb.setAttribute('aria-pressed', 'false');
+      // After a forced redraw, pages that were selected stay selected
+      thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
 
       const caption = document.createElement('span');
       caption.textContent = `Page ${i + 1}`;
@@ -73,6 +85,7 @@ async function renderPageGrid() {
         }
         // aria-pressed tells screen readers the state; the CSS uses it for the highlight
         thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
+        updatePageTools();
       });
       pageGrid.append(thumb);
     }
@@ -156,6 +169,22 @@ fileInput.addEventListener('change', async () => {
   } catch {
     // No variable after catch, since we don't need the technical details here
     message.textContent = 'A file could not be read from your device.';
+  }
+});
+
+rotateButton.addEventListener('click', async () => {
+  const file = previewedFile;
+  editing = true;
+  updatePageTools();
+  try {
+    // Replace the file's bytes with the rotated version, then redraw its thumbnails
+    file.bytes = await rotatePages(file.bytes, [...selectedPages], 90);
+    await renderPageGrid(true);
+  } catch (error) {
+    previewError.textContent = `Can't rotate ${file.name}. ${error.message}`;
+  } finally {
+    editing = false;
+    updatePageTools();
   }
 });
 

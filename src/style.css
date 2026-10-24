@@ -97,6 +97,10 @@ button:disabled {
   margin-top: 1.5rem;
 }
 
+#page-tools {
+  margin-top: 1.5rem;
+}
+
 /* Each thumbnail is a button; reset the default button look so only the page shows */
 #page-grid .page-thumb {
   padding: 0.25rem;

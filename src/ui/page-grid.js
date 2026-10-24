@@ -221,6 +221,9 @@ extractButton.addEventListener('click', async () => {
       bytes,
       // Remembers the source, so later extractions can be grouped under it
       extractedFrom: file,
+      // Its pages are also in the source, so merging everything would repeat them.
+      // The user ticks it when they want it merged.
+      excludedFromMerge: true,
     };
 
     // Go under the last extraction from this file, or under the file itself if

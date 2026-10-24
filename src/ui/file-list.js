@@ -40,6 +40,26 @@ const SAMPLES = [
   },
 ];
 
+// The files that Merge will use: every file except those the user has unticked
+function filesToMerge() {
+  return state.files.filter((file) => !file.excludedFromMerge);
+}
+
+// Says on the Merge button how many files it will merge, and disables it if that's
+// fewer than two
+function updateMergeButton() {
+  const total = state.files.length;
+  const count = filesToMerge().length;
+  mergeButton.disabled = count < 2;
+  if (total < 2) {
+    mergeButton.textContent = 'Merge';
+  } else if (count === total) {
+    mergeButton.textContent = `Merge ${count} files`;
+  } else {
+    mergeButton.textContent = `Merge ${count} of ${total} files`;
+  }
+}
+
 // Rebuilds the visible list from `state.files`
 function renderFileList() {
   // If the previewed file is gone (or nothing was chosen yet), use the first file
@@ -56,6 +76,21 @@ function renderFileList() {
       handle.className = 'drag-handle';
       handle.textContent = '⠿';
       handle.title = 'Drag to change the merge order';
+
+      // Ticked files are merged. The label is for screen readers; sighted users see
+      // the file name next to the box.
+      const include = document.createElement('input');
+      include.type = 'checkbox';
+      include.checked = !file.excludedFromMerge;
+      include.setAttribute('aria-label', `Include ${file.name} in merge`);
+      include.addEventListener('change', () => {
+        file.excludedFromMerge = !include.checked;
+        // Only the button changes. Redrawing the whole list would rebuild this
+        // checkbox and lose keyboard focus.
+        updateMergeButton();
+        // An old merge error was about the old choice of files
+        message.textContent = '';
+      });
 
       const name = document.createElement('span');
       name.className = 'file-name';
@@ -84,13 +119,13 @@ function renderFileList() {
       const actions = document.createElement('div');
       actions.className = 'file-actions';
       actions.append(previewButton, removeButton);
-      item.append(handle, name, actions);
+      item.append(handle, include, name, actions);
 
       return item;
     }),
   );
-  // Merging, and so choosing a merge order, needs at least two files
-  mergeButton.disabled = state.files.length < 2;
+  updateMergeButton();
+  // Choosing a merge order needs at least two files
   reorderHint.hidden = state.files.length < 2;
   // An old error is about the old list, so clear it whenever the list changes
   message.textContent = '';
@@ -213,9 +248,10 @@ mergeButton.addEventListener('click', async () => {
   // A file that can't be previewed won't merge either, so the merge error covers it
   clearPreviewError();
   try {
-    const pdfs = state.files.map((file) => file.bytes);
+    const chosen = filesToMerge();
+    const pdfs = chosen.map((file) => file.bytes);
     // The names let the error say which files are bad
-    const names = state.files.map((file) => file.name);
+    const names = chosen.map((file) => file.name);
     downloadPdf(await mergePdfs(pdfs, names), 'merged.pdf');
   } catch (error) {
     // Our own functions throw messages written for users, so show them as they are

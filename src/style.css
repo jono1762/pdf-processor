@@ -100,6 +100,10 @@ label {
   user-select: none;
 }
 
+#file-list input[type='checkbox'] {
+  margin-right: 0.75rem;
+}
+
 /* The name takes the free space, which pushes the buttons to the right */
 .file-name {
   flex: 1;

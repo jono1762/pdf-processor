@@ -4,7 +4,8 @@ export const state = {
   // The PDFs the user has chosen, in order, as { name, bytes }. The bytes are read
   // once when a file is added; edits replace them. Merging uses this list.
   // A file made by extracting pages also has `extractedFrom` (its source file), and
-  // a file that has been extracted from has `extractionCount`.
+  // a file that has been extracted from has `extractionCount`. A file the user has
+  // unticked for merging has `excludedFromMerge: true`; without it, it is merged.
   files: [],
   // The file the user wants previewed. Stays put when other files are added or removed.
   previewedFile: null,

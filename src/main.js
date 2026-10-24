@@ -1,6 +1,6 @@
 import './style.css';
 import { mergePdfs } from './lib/merge.js';
-import { readFileBytes, downloadPdf, editedFilename } from './download.js';
+import { readFileBytes, downloadPdf, editedFilename } from './ui/download.js';
 import { openPdfForRendering, renderPageThumbnail } from './lib/render.js';
 import { rotatePages } from './lib/rotate.js';
 import { deletePages } from './lib/delete.js';

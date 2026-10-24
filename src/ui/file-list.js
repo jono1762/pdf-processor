@@ -10,6 +10,7 @@ import { createSortable } from './sortable.js';
 import { renderPageGrid, clearPreviewError } from './page-grid.js';
 
 const fileInput = document.querySelector('#file-input');
+const dropArea = document.querySelector('#drop-area');
 const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
 const message = document.querySelector('#message');
@@ -165,6 +166,40 @@ fileInput.addEventListener('change', () => {
   fileInput.value = '';
   addFiles(picked);
 });
+
+// True for drags that carry files, as opposed to, say, dragged text
+function dragHasFiles(event) {
+  return event.dataTransfer?.types.includes('Files');
+}
+
+dropArea.addEventListener('dragover', (event) => {
+  if (!dragHasFiles(event)) return;
+  // Without preventDefault the browser doesn't allow dropping here
+  event.preventDefault();
+  dropArea.classList.add('drag-over');
+});
+
+dropArea.addEventListener('dragleave', (event) => {
+  // This also fires when the pointer moves onto something inside the area; ignore
+  // that, and only remove the highlight when the pointer really leaves
+  if (!dropArea.contains(event.relatedTarget)) {
+    dropArea.classList.remove('drag-over');
+  }
+});
+
+dropArea.addEventListener('drop', (event) => {
+  event.preventDefault();
+  dropArea.classList.remove('drag-over');
+  addFiles(Array.from(event.dataTransfer.files));
+});
+
+// A file dropped anywhere else would make the browser open it in this tab, and the
+// user would lose their work. Cancel the browser's default for file drags.
+for (const type of ['dragover', 'drop']) {
+  window.addEventListener(type, (event) => {
+    if (dragHasFiles(event)) event.preventDefault();
+  });
+}
 
 mergeButton.addEventListener('click', async () => {
   message.textContent = '';

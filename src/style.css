@@ -55,6 +55,19 @@ label {
   gap: 0.5rem;
 }
 
+/* Dashed box around the file picker; files can be dropped on it */
+#drop-area {
+  padding: 1rem;
+  border: 2px dashed #9aa5b1;
+  border-radius: 0.5rem;
+}
+
+/* Shown while files are being dragged over the box */
+#drop-area.drag-over {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
 #reorder-hint {
   margin: 1rem 0 0;
   font-size: 0.875rem;

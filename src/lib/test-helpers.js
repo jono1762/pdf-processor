@@ -13,3 +13,23 @@ export async function createTestPdf(widths) {
   }
   return doc.save();
 }
+
+/**
+ * Reads a PDF and returns each page's width, so tests can tell pages apart.
+ * @param {Uint8Array} bytes
+ * @returns {Promise<number[]>}
+ */
+export async function pageWidths(bytes) {
+  const doc = await PDFDocument.load(bytes);
+  return doc.getPages().map((page) => page.getWidth());
+}
+
+/**
+ * Reads a PDF and returns each page's rotation in degrees.
+ * @param {Uint8Array} bytes
+ * @returns {Promise<number[]>}
+ */
+export async function pageRotations(bytes) {
+  const doc = await PDFDocument.load(bytes);
+  return doc.getPages().map((page) => page.getRotation().angle);
+}

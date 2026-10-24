@@ -1,13 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { PDFDocument } from 'pdf-lib';
 import { rotatePages } from './rotate.js';
-import { createTestPdf } from './test-helpers.js';
-
-// Reads a PDF and returns each page's rotation in degrees
-async function pageRotations(bytes) {
-  const doc = await PDFDocument.load(bytes);
-  return doc.getPages().map((page) => page.getRotation().angle);
-}
+import { createTestPdf, pageRotations } from './test-helpers.js';
 
 describe('rotatePages', () => {
   it('rotates only the chosen pages', async () => {

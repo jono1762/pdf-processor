@@ -1,13 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { PDFDocument } from 'pdf-lib';
 import { extractPages } from './extract.js';
-import { createTestPdf } from './test-helpers.js';
-
-// Reads a PDF and returns each page's width, so tests can tell pages apart
-async function pageWidths(bytes) {
-  const doc = await PDFDocument.load(bytes);
-  return doc.getPages().map((page) => page.getWidth());
-}
+import { createTestPdf, pageWidths } from './test-helpers.js';
 
 describe('extractPages', () => {
   it('keeps only the chosen pages', async () => {

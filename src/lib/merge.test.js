@@ -1,13 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { PDFDocument } from 'pdf-lib';
 import { mergePdfs } from './merge.js';
-import { createTestPdf } from './test-helpers.js';
-
-// Reads a PDF and returns each page's width, so tests can check page order
-async function pageWidths(bytes) {
-  const doc = await PDFDocument.load(bytes);
-  return doc.getPages().map((page) => page.getWidth());
-}
+import { createTestPdf, pageWidths } from './test-helpers.js';
 
 // describe groups related tests; it defines one test
 describe('mergePdfs', () => {

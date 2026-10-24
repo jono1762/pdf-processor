@@ -10,6 +10,7 @@ See [PLAN.md](PLAN.md) for the roadmap.
 
 - Merge, split, reorder, rotate and delete pages
 - OCR scanned PDFs into searchable PDFs
+- Built-in sample documents, so you can try it without your own files
 
 ## Privacy
 

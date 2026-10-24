@@ -4,6 +4,8 @@ import { readFileBytes, downloadPdf, editedFilename } from './download.js';
 import { openPdfForRendering, renderPageThumbnail } from './lib/render.js';
 import { rotatePages } from './lib/rotate.js';
 import { deletePages } from './lib/delete.js';
+import { reorderPages } from './lib/reorder.js';
+import Sortable from 'sortablejs';
 
 const fileInput = document.querySelector('#file-input');
 const fileList = document.querySelector('#file-list');
@@ -36,6 +38,34 @@ const selectedPages = new Set();
 let editing = false;
 // How many pages the drawn file has; 0 until it has been opened
 let pageCount = 0;
+// True while the thumbnails are still being drawn
+let drawing = false;
+
+// Lets the user drag thumbnails to reorder them. SortableJS moves the elements on
+// screen; our job is to make the PDF match once a drag ends.
+const sortable = Sortable.create(pageGrid, {
+  animation: 150,
+  // The browser's own drag support doesn't work on <button> elements in Firefox,
+  // so SortableJS does the dragging itself
+  forceFallback: true,
+  // Moving less than this many pixels counts as a click, so selecting still works
+  fallbackTolerance: 5,
+  onEnd({ oldIndex, newIndex }) {
+    if (oldIndex === newIndex) return;
+
+    // Start from [0, 1, 2, ...], then take the dragged page out and put it where it
+    // was dropped. Array.from with a length builds that list of page numbers.
+    const order = Array.from({ length: pageCount }, (_, i) => i);
+    const [moved] = order.splice(oldIndex, 1);
+    order.splice(newIndex, 0, moved);
+
+    editPreviewedFile(
+      'reorder pages in',
+      (bytes) => reorderPages(bytes, order),
+      false,
+    );
+  },
+});
 
 // Page tools only make sense with a previewed file, selected pages and no edit running
 function updatePageTools() {
@@ -50,6 +80,8 @@ function updatePageTools() {
   deleteButton.disabled = noSelection || selectedPages.size === pageCount;
   // Downloading needs a file but no selection; wait for a running edit so we get its result
   downloadButton.disabled = editing || !previewedFile;
+  // Dragging needs the full grid (the page numbers must match) and no edit running
+  sortable.option('disabled', editing || drawing);
 }
 
 // Shows a thumbnail of every page of the previewed file.
@@ -70,10 +102,14 @@ async function renderPageGrid(force = false) {
   previewError.textContent = '';
   if (!file) {
     previewStatus.hidden = true;
+    drawing = false;
+    updatePageTools();
     return;
   }
 
   previewStatus.hidden = false;
+  drawing = true;
+  updatePageTools();
   let pdfDoc;
   try {
     pdfDoc = await openPdfForRendering(file.bytes);
@@ -116,7 +152,11 @@ async function renderPageGrid(force = false) {
   } finally {
     // We only need the document while drawing; this frees its memory in PDF.js
     pdfDoc?.loadingTask.destroy();
-    if (thisRender === latestRender) previewStatus.hidden = true;
+    if (thisRender === latestRender) {
+      previewStatus.hidden = true;
+      drawing = false;
+      updatePageTools();
+    }
   }
 }
 
@@ -191,10 +231,11 @@ fileInput.addEventListener('change', async () => {
   }
 });
 
-// Runs an edit on the selected pages of the previewed file, then redraws the grid.
-// `verb` is only used in the error message. `keepSelection` is for edits that
-// don't change page numbers (rotating); after deleting, the old numbers are wrong.
-async function editSelectedPages(verb, edit, keepSelection) {
+// Runs an edit on the previewed file, then redraws the grid. `edit` gets the file's
+// bytes and the selected page numbers. `verb` is only used in the error message.
+// `keepSelection` is for edits that don't change page numbers (rotating); after
+// deleting or reordering, the old numbers are wrong.
+async function editPreviewedFile(verb, edit, keepSelection) {
   const file = previewedFile;
   editing = true;
   updatePageTools();
@@ -204,6 +245,9 @@ async function editSelectedPages(verb, edit, keepSelection) {
     if (!keepSelection) selectedPages.clear();
     await renderPageGrid(true);
   } catch (error) {
+    // The screen may already show a change that didn't happen (a dragged page),
+    // so redraw from the real bytes first, then show the error
+    await renderPageGrid(true);
     previewError.textContent = `Can't ${verb} ${file.name}. ${error.message}`;
   } finally {
     editing = false;
@@ -226,7 +270,7 @@ selectAllButton.addEventListener('click', () => {
 });
 
 rotateButton.addEventListener('click', () => {
-  editSelectedPages(
+  editPreviewedFile(
     'rotate',
     (bytes, pages) => rotatePages(bytes, pages, 90),
     true,
@@ -234,7 +278,7 @@ rotateButton.addEventListener('click', () => {
 });
 
 deleteButton.addEventListener('click', () => {
-  editSelectedPages('delete pages from', deletePages, false);
+  editPreviewedFile('delete pages from', deletePages, false);
 });
 
 downloadButton.addEventListener('click', () => {

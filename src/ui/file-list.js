@@ -1,4 +1,9 @@
 import { mergePdfs } from '../lib/merge.js';
+import {
+  createMultiPageSample,
+  createSidewaysSample,
+  createLargeSample,
+} from '../lib/samples.js';
 import { readFileBytes, downloadPdf } from './download.js';
 import { state } from './state.js';
 import { renderPageGrid, clearPreviewError } from './page-grid.js';
@@ -7,6 +12,26 @@ const fileInput = document.querySelector('#file-input');
 const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
 const message = document.querySelector('#message');
+const sampleButtons = document.querySelector('#sample-buttons');
+
+// The "Try a sample" buttons: what each says, what its file is called, how to make it
+const SAMPLES = [
+  {
+    label: 'Multi-page document',
+    filename: 'sample-document.pdf',
+    create: createMultiPageSample,
+  },
+  {
+    label: 'Sideways page',
+    filename: 'sample-sideways-page.pdf',
+    create: createSidewaysSample,
+  },
+  {
+    label: 'Large (300 pages)',
+    filename: 'sample-large.pdf',
+    create: createLargeSample,
+  },
+];
 
 // Rebuilds the visible list from `state.files`
 function renderFileList() {
@@ -55,6 +80,24 @@ function renderFileList() {
   // An old error is about the old list, so clear it whenever the list changes
   message.textContent = '';
   renderPageGrid();
+}
+
+for (const sample of SAMPLES) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = sample.label;
+  button.addEventListener('click', async () => {
+    // Disabled while the sample is made, so a second click can't add it twice
+    button.disabled = true;
+    try {
+      const bytes = await sample.create();
+      state.files = [...state.files, { name: sample.filename, bytes }];
+      renderFileList();
+    } finally {
+      button.disabled = false;
+    }
+  });
+  sampleButtons.append(button);
 }
 
 fileInput.addEventListener('change', async () => {

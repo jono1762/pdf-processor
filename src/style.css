@@ -40,6 +40,21 @@ label {
   font-weight: 600;
 }
 
+/* The label and the sample buttons sit on one line, with a gap between them */
+.sample-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+#sample-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 #file-list {
   list-style: none;
   padding: 0;

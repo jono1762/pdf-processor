@@ -20,6 +20,24 @@ export function isPdfFile(file) {
 }
 
 /**
+ * The largest file that can be opened, in bytes: 200 MB, counting 1 MB as
+ * 1024 × 1024 bytes as Windows does. A guess for now, to be tuned with real
+ * measurements later.
+ */
+export const MAX_FILE_BYTES = 200 * 1024 * 1024;
+
+/**
+ * Says whether a file is too large to open safely. Every file is held in memory,
+ * so a huge one could freeze or crash the tab.
+ * @param {{ size: number }} file - a File, or anything with a size in bytes
+ * @returns {boolean}
+ */
+export function isTooLarge(file) {
+  // File.size is known without reading the file, so this check is instant
+  return file.size > MAX_FILE_BYTES;
+}
+
+/**
  * Builds the name for an edited file, e.g. "report.pdf" becomes "report-edited.pdf".
  * @param {string} name - the original file name
  * @returns {string}

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { editedFilename, extractedFilename, isPdfFile } from './download.js';
+import {
+  editedFilename,
+  extractedFilename,
+  isPdfFile,
+  isTooLarge,
+  MAX_FILE_BYTES,
+} from './download.js';
 
 describe('editedFilename', () => {
   it('adds -edited before the .pdf extension', () => {
@@ -36,6 +42,18 @@ describe('isPdfFile', () => {
   it('rejects a name that only contains "pdf"', () => {
     expect(isPdfFile({ name: 'pdf.txt', type: '' })).toBe(false);
     expect(isPdfFile({ name: 'report.pdf.txt', type: '' })).toBe(false);
+  });
+});
+
+describe('isTooLarge', () => {
+  it('allows files up to and including the limit', () => {
+    expect(isTooLarge({ size: 0 })).toBe(false);
+    expect(isTooLarge({ size: MAX_FILE_BYTES - 1 })).toBe(false);
+    expect(isTooLarge({ size: MAX_FILE_BYTES })).toBe(false);
+  });
+
+  it('rejects files over the limit', () => {
+    expect(isTooLarge({ size: MAX_FILE_BYTES + 1 })).toBe(true);
   });
 });
 

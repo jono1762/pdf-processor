@@ -4,7 +4,13 @@ import {
   createSidewaysSample,
   createLargeSample,
 } from '../lib/samples.js';
-import { readFileBytes, downloadPdf, isPdfFile } from './download.js';
+import {
+  readFileBytes,
+  downloadPdf,
+  isPdfFile,
+  isTooLarge,
+  MAX_FILE_BYTES,
+} from './download.js';
 import { state } from './state.js';
 import { createSortable } from './sortable.js';
 import {
@@ -171,9 +177,22 @@ setFileListRedraw(renderFileList);
 
 // Adds files to the end of the list. Used by the file picker, and later by drops.
 async function addFiles(files) {
-  // The picker only offers PDFs, but a dropped file can be anything
-  const accepted = files.filter(isPdfFile);
-  const rejected = files.filter((file) => !isPdfFile(file));
+  // Sort each file into one group, checking the type first, then the size.
+  // `else if` means a non-PDF never has its size checked.
+  const notPdf = [];
+  const tooLarge = [];
+  const accepted = [];
+  for (const file of files) {
+    if (!isPdfFile(file)) {
+      // The picker only offers PDFs, but a dropped file can be anything
+      notPdf.push(file);
+    } else if (isTooLarge(file)) {
+      // Size is checked before reading, so a huge file is never loaded into memory
+      tooLarge.push(file);
+    } else {
+      accepted.push(file);
+    }
+  }
 
   if (accepted.length > 0) {
     try {
@@ -195,9 +214,20 @@ async function addFiles(files) {
   }
 
   // Shown after renderFileList, which clears the message line
-  if (rejected.length > 0) {
-    const names = rejected.map((file) => file.name).join(', ');
-    message.textContent = `Only PDF files can be added: ${names}`;
+  const listNames = (list) => list.map((file) => file.name).join(', ');
+  const problems = [];
+  if (notPdf.length > 0) {
+    problems.push(`Only PDF files can be added: ${listNames(notPdf)}.`);
+  }
+  if (tooLarge.length > 0) {
+    const limitMb = MAX_FILE_BYTES / (1024 * 1024);
+    problems.push(
+      `Too large to open (limit ${limitMb} MB): ${listNames(tooLarge)}.`,
+    );
+  }
+  if (problems.length > 0) {
+    // Each problem ends with its own full stop, so they are joined with a space
+    message.textContent = problems.join(' ');
   }
 }
 

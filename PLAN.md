@@ -6,12 +6,12 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 
 **Pitch:** Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
-## v1: Core page editor
+## v1: Core page editor (done, tagged `v1`)
 
 - Open one or more PDFs (file picker and drag-and-drop)
 - Page grid with thumbnails
 - Reorder pages (drag-and-drop), rotate, delete
-- Merge multiple PDFs; split or extract page ranges
+- Merge multiple PDFs; extract selected pages into a new file
 - Download the result
 - "Try a sample" buttons using bundled sample documents
 

@@ -12,7 +12,7 @@ See [PLAN.md](PLAN.md) for the roadmap.
 
 - Merge the PDFs you choose, in the order you want (drag to reorder)
 - Select pages to rotate, delete, reorder (by dragging) or extract into a new file
-- Open files by choosing them or dropping them on the page
+- Open files by choosing them or dropping them on the page (up to 200 MB each)
 - Built-in sample documents, so you can try it without your own files
 
 ## Privacy

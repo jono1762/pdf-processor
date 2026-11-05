@@ -40,6 +40,11 @@ label {
   font-weight: 600;
 }
 
+/* The browser's default file picker can be wider than a narrow phone screen */
+#file-input {
+  max-width: 100%;
+}
+
 /* The label and the sample buttons sit on one line, with a gap between them */
 .sample-row {
   display: flex;
@@ -107,6 +112,11 @@ label {
 /* The name takes the free space, which pushes the buttons to the right */
 .file-name {
   flex: 1;
+  /* By default a flex item won't shrink below its longest word, so a long file
+     name would push the buttons off the screen */
+  min-width: 0;
+  /* Lets a long name with no spaces break onto a new line at any character */
+  overflow-wrap: anywhere;
 }
 
 /* The row whose pages are shown in the grid */
@@ -150,6 +160,8 @@ button:disabled {
 
 #page-tools {
   display: flex;
+  /* Buttons that don't fit move to the next line, instead of widening the page */
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 1.5rem;
 }
@@ -207,6 +219,8 @@ button:disabled {
 #preview-error {
   color: #b91c1c;
   font-weight: 600;
+  /* These messages can include long file names */
+  overflow-wrap: anywhere;
 }
 
 footer {

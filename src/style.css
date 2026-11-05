@@ -228,3 +228,28 @@ footer {
   font-size: 0.875rem;
   color: #52606d;
 }
+
+/* Phone-sized screens. This stays at the end of the file because, when rules are
+   equally specific, the later one wins, so these replace the rules above. */
+@media (max-width: 40rem) {
+  /* Two columns, so each thumbnail is large enough to read */
+  #page-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #file-list li {
+    flex-wrap: wrap;
+  }
+
+  /* Full width forces the buttons onto their own line, leaving the whole first
+     line for the handle, checkbox and file name */
+  .file-actions {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  /* Each button takes an equal share of the row */
+  .file-actions button {
+    flex: 1;
+  }
+}

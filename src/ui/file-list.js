@@ -105,9 +105,11 @@ function renderFileList() {
 
       const previewButton = document.createElement('button');
       previewButton.type = 'button';
-      previewButton.textContent = 'Preview';
-      // The file already being previewed has nothing to switch to
-      previewButton.disabled = file === state.previewedFile;
+      // The file already being previewed has nothing to switch to, so its button
+      // is disabled and its text says what is happening now
+      const isPreviewed = file === state.previewedFile;
+      previewButton.textContent = isPreviewed ? 'Previewing' : 'Preview';
+      previewButton.disabled = isPreviewed;
       previewButton.addEventListener('click', () => {
         state.previewedFile = file;
         renderFileList();

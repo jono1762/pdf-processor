@@ -130,6 +130,13 @@ label {
   gap: 0.5rem;
 }
 
+/* Wide enough for the longest label, "Previewing", so every button in the list is
+   the same width and nothing shifts when the previewed file changes. min-width
+   (not width) lets a button grow if a larger font would otherwise cut off its text. */
+.file-actions button {
+  min-width: 6.5rem;
+}
+
 button {
   padding: 0.4rem 0.9rem;
   border: 1px solid #9aa5b1;
@@ -148,6 +155,15 @@ button {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* The only button here that gets disabled is "Previewing". It reports a status,
+   so it stays readable instead of fading like an unavailable button. */
+.file-actions button:disabled {
+  opacity: 1;
+  background: transparent;
+  color: #52606d;
+  cursor: default;
 }
 
 /* Three equal columns; 1fr means one equal share of the width */

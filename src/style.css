@@ -55,6 +55,13 @@ h1 {
   gap: 0.5rem;
 }
 
+/* The heading's bottom margin provides the space here. Margins in a flex column don't
+   overlap as they normally do, so without this the intro would sit lower on the empty
+   page and jump up when a file is added. */
+h1 + p {
+  margin-top: 0;
+}
+
 #drop-title {
   margin: 0 0 0.75rem;
   font-size: 1.125rem;
@@ -89,6 +96,26 @@ h1 {
   border-radius: 0.5rem;
   background: white;
   text-align: center;
+}
+
+/* Before any files are added, the drop area grows to fill the spare height on the
+   page, so there is no large gap above the footer. That needs main to lay out its
+   children as a column; :has() applies this only while the drop area is in this state.
+   max-height stops the box getting oversized on very tall screens, and border-box
+   counts the padding and border as part of that height. */
+main:has(#drop-area:not(.has-files)) {
+  display: flex;
+  flex-direction: column;
+}
+
+#drop-area:not(.has-files) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  max-height: 60dvh;
 }
 
 /* With files added it shrinks to a slim row, title on the left and button on the

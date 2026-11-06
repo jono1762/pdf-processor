@@ -5,8 +5,11 @@ body {
   margin: 0;
   padding: 2rem 1rem;
   /* Make the page at least as tall as the window, as a column, so the footer
-     can sit at the bottom when there is little content */
-  min-height: 100vh;
+     can sit at the bottom when there is little content. On phones, 100vh can include
+     the space behind the browser's address bar, which would push the footer out of
+     view. dvh is the height actually visible. Browsers too old to know dvh ignore
+     this, and the footer simply follows the content instead. */
+  min-height: 100dvh;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -24,6 +27,17 @@ footer {
 /* main takes all the spare height, which pushes the footer to the bottom */
 main {
   flex: 1;
+}
+
+/* Elements with nothing in them yet take up no space, so on a short screen the footer
+   can come straight after the sample buttons. The grid's rule depends on the toolbar
+   instead of being empty, because the grid is briefly empty while it redraws, and
+   its position must not change then. ~ selects a later element with the same parent. */
+#file-list:empty,
+#message:empty,
+#preview-error:empty,
+#page-tools[hidden] ~ #page-grid {
+  margin: 0;
 }
 
 /* One focus ring for every control. It is dark and dashed so it can't be mistaken
@@ -318,7 +332,7 @@ button:disabled {
 }
 
 footer {
-  margin-top: 3rem;
+  margin-top: 1rem;
   font-size: 0.875rem;
   color: #52606d;
 }
@@ -358,6 +372,12 @@ footer {
     flex: 1;
   }
 
+  /* Less padding than on larger screens, so the empty page fits a small phone without
+     scrolling and the footer keeps its space from the bottom of the screen */
+  #drop-area {
+    padding-block: 1.5rem;
+  }
+
   /* Three equal columns on one row, so the samples stay available without pushing
      the pages further down the screen */
   #sample-buttons {
@@ -393,8 +413,9 @@ footer {
    the 1rem page margins add up to 49rem. So the selection tools float at this width,
    which is wider than the phone layout above. */
 @media (max-width: 49rem) {
-  /* Room at the end of the page, so the floating bar can't cover the last pages */
-  body {
+  /* Room at the end of the page, so the floating bar can't cover the last pages.
+     :has() checks what's inside body, so this only applies once a file is open. */
+  body:has(#page-tools:not([hidden])) {
     padding-bottom: 6rem;
   }
 

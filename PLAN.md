@@ -45,6 +45,7 @@ UI polish:
 - Equal-width page tools, with Rotate, Extract and Delete in a floating bar on phones
 - Equal-width sample buttons on one row, with shorter labels
 - Keep the scroll position when editing pages redraws the grid
+- Remove spare space from empty elements, so the footer can sit closer to the content on short screens
 - General polish
 
 **v1.0.2 is done when:**

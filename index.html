@@ -59,11 +59,12 @@
         <button id="download-button" type="button" disabled>
           Download this file
         </button>
-        <button id="rotate-button" type="button" hidden>Rotate selected</button>
-        <button id="extract-button" type="button" hidden>
-          Extract selected
-        </button>
-        <button id="delete-button" type="button" hidden>Delete selected</button>
+        <!-- Grouped so that on phones they can float together at the bottom of the screen -->
+        <div id="selection-tools" hidden>
+          <button id="rotate-button" type="button">Rotate</button>
+          <button id="extract-button" type="button">Extract</button>
+          <button id="delete-button" type="button">Delete</button>
+        </div>
       </div>
       <p id="page-hint" hidden></p>
       <p id="preview-error" role="alert"></p>

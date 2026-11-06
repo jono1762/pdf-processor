@@ -10,6 +10,7 @@ import { createSortable } from './sortable.js';
 
 const pageGrid = document.querySelector('#page-grid');
 const pageTools = document.querySelector('#page-tools');
+const selectionTools = document.querySelector('#selection-tools');
 const selectAllButton = document.querySelector('#select-all-button');
 const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
@@ -87,10 +88,9 @@ function updatePageTools() {
   selectAllButton.disabled = editing || pageCount === 0;
 
   const noSelection = selectedPages.size === 0;
-  rotateButton.hidden = noSelection;
-  extractButton.hidden = noSelection;
+  selectionTools.hidden = noSelection;
   // A PDF can't have zero pages, so deleting every page is not allowed
-  deleteButton.hidden = noSelection || allSelected;
+  deleteButton.hidden = allSelected;
 
   // These wait for a running edit, so it can't overlap with another one
   rotateButton.disabled = editing;
@@ -248,7 +248,8 @@ deleteButton.addEventListener('click', async () => {
   await editPreviewedFile('delete pages from', deletePages, false);
   // Deleting clears the selection, which hides this button. Keyboard focus would be
   // lost with it, so move focus to the nearest button that stays visible.
-  selectAllButton.focus();
+  // preventScroll stops the browser jumping up to that button.
+  selectAllButton.focus({ preventScroll: true });
 });
 
 extractButton.addEventListener('click', async () => {

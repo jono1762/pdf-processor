@@ -199,18 +199,27 @@ button:disabled {
   display: none;
 }
 
-/* Hidden tools keep their space, so the thumbnails below don't move when a page is
-   selected and the next tap can't land on the wrong one. visibility: hidden also
-   means they can't be clicked, reached with the keyboard or read by screen readers. */
-#page-tools button[hidden] {
-  display: inline-block;
-  visibility: hidden;
+/* Wide enough for the longest label, "Download this file", so every tool is the same
+   width and changing "Select all" to "Clear selection" can't move the others. Merge
+   matches them, so its edges line up with the toolbar below it. */
+#merge-button,
+#page-tools button {
+  min-width: 9rem;
 }
 
-/* Wide enough for its other label, "Clear selection", so changing label can't push
-   the buttons after it along or onto a new row */
-#select-all-button {
-  min-width: 7.5rem;
+#selection-tools {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* The tools for selected pages keep their space while hidden, so that the thumbnails
+   can't move when a page is selected and the next click can't land on the wrong one.
+   visibility: hidden also means they can't be clicked, reached with the keyboard or
+   read by screen readers. Phones use a floating bar instead (see below). */
+#selection-tools[hidden],
+#delete-button[hidden] {
+  display: flex;
+  visibility: hidden;
 }
 
 /* Each thumbnail is a button; reset the default button look so only the page shows */
@@ -312,6 +321,51 @@ footer {
   /* Each button takes an equal share of the row */
   .file-actions button {
     flex: 1;
+  }
+
+  /* Room at the end of the page, so the floating bar can't cover the last pages */
+  body {
+    padding-bottom: 6rem;
+  }
+
+  /* Two equal columns for Select all and Download */
+  #page-tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #page-tools button {
+    min-width: 0;
+  }
+
+  /* The same width as one toolbar column: half the row, less half the 0.5rem gap */
+  #merge-button {
+    width: calc(50% - 0.25rem);
+    min-width: 0;
+  }
+
+  /* A bar fixed to the bottom of the screen, so these tools are always in reach on a
+     long file, and they don't take up space on the page or move the thumbnails.
+     safe-area-inset-bottom keeps it clear of the iPhone's home bar. */
+  #selection-tools {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 0.5rem 1rem max(0.5rem, env(safe-area-inset-bottom));
+    border-top: 1px solid #d9e2ec;
+    background: white;
+    box-shadow: 0 -0.25rem 1rem rgba(31, 41, 51, 0.15);
+  }
+
+  #selection-tools button {
+    flex: 1;
+  }
+
+  /* Hidden tools take no space here, because the bar floats over the page */
+  #selection-tools[hidden],
+  #delete-button[hidden] {
+    display: none;
   }
 }
 

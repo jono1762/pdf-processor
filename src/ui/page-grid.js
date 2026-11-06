@@ -23,6 +23,12 @@ const pageHint = document.querySelector('#page-hint');
 // at about their shown size there
 const THUMBNAIL_WIDTH = 320;
 
+// The hint shown while no pages are selected. "coarse" means the main pointer is
+// imprecise, like a finger, so touch screens get touch instructions.
+const PAGE_HINT = window.matchMedia('(pointer: coarse)').matches
+  ? 'Tap to select pages to rotate, delete or extract them. Press and hold to drag.'
+  : 'Click to select pages to rotate, delete or extract them. Drag to reorder.';
+
 // The file whose pages are actually drawn in the grid right now
 let drawnFile = null;
 // Counts grid renders, so a slow older render can tell it has been replaced
@@ -69,7 +75,8 @@ const sortable = createSortable(pageGrid, {
   },
 });
 
-// Page tools only make sense with a previewed file, selected pages and no edit running
+// Shows only the tools that can be used right now, and a hint saying how to get the
+// ones that are hidden. Disabling is only for the moment while an edit is running.
 function updatePageTools() {
   // With no file there are no pages to act on, so the tools aren't shown at all
   pageTools.hidden = !state.previewedFile;
@@ -79,18 +86,35 @@ function updatePageTools() {
   selectAllButton.textContent = allSelected ? 'Clear selection' : 'Select all';
   selectAllButton.disabled = editing || pageCount === 0;
 
-  const noSelection =
-    editing || !state.previewedFile || selectedPages.size === 0;
-  rotateButton.disabled = noSelection;
+  const noSelection = selectedPages.size === 0;
+  rotateButton.hidden = noSelection;
+  extractButton.hidden = noSelection;
   // A PDF can't have zero pages, so deleting every page is not allowed
-  deleteButton.disabled = noSelection || selectedPages.size === pageCount;
-  extractButton.disabled = noSelection;
+  deleteButton.hidden = noSelection || allSelected;
+
+  // These wait for a running edit, so it can't overlap with another one
+  rotateButton.disabled = editing;
+  deleteButton.disabled = editing;
+  extractButton.disabled = editing;
   // Downloading needs a file but no selection; wait for a running edit so we get its result
   downloadButton.disabled = editing || !state.previewedFile;
   // Dragging needs the full grid (the page numbers must match) and no edit running
   sortable.option('disabled', editing || drawing);
-  // The hint is about the thumbnails, so it needs a file with pages to refer to
+
+  // This line always has something to say once there are pages, so it never
+  // disappears and moves the thumbnails while the user is selecting them
   pageHint.hidden = pageCount === 0;
+  pageHint.textContent = pageHintText(noSelection, allSelected);
+}
+
+// Says how to get any hidden tools, or else how many pages are selected
+function pageHintText(noSelection, allSelected) {
+  if (noSelection) return PAGE_HINT;
+  if (allSelected) {
+    return 'Every page is selected. A PDF needs at least one page, so Delete is hidden.';
+  }
+  const count = selectedPages.size;
+  return `${count} ${count === 1 ? 'page' : 'pages'} selected.`;
 }
 
 // Shows a thumbnail of every page of the previewed file.
@@ -99,10 +123,14 @@ export async function renderPageGrid(force = false) {
   const file = state.previewedFile;
   // The grid already shows this file, so skip the redraw
   if (file === drawnFile && !force) return;
-  // Page numbers belong to one file, so a different file starts with nothing selected
-  if (file !== drawnFile) selectedPages.clear();
+  // Page numbers belong to one file, so a different file starts with nothing selected.
+  // Redrawing the same file keeps its page count, so that with every page selected,
+  // rotating doesn't make Delete flash on screen during the redraw.
+  if (file !== drawnFile) {
+    selectedPages.clear();
+    pageCount = 0;
+  }
   drawnFile = file;
-  pageCount = 0;
   updatePageTools();
 
   const thisRender = ++latestRender;
@@ -156,6 +184,7 @@ export async function renderPageGrid(force = false) {
   } catch (error) {
     // Only report errors for the current file, not one the user has moved on from
     if (thisRender === latestRender) {
+      pageCount = 0;
       previewError.textContent = `Can't preview ${file.name}. ${error.message}`;
     }
   } finally {
@@ -215,8 +244,11 @@ rotateButton.addEventListener('click', () => {
   );
 });
 
-deleteButton.addEventListener('click', () => {
-  editPreviewedFile('delete pages from', deletePages, false);
+deleteButton.addEventListener('click', async () => {
+  await editPreviewedFile('delete pages from', deletePages, false);
+  // Deleting clears the selection, which hides this button. Keyboard focus would be
+  // lost with it, so move focus to the nearest button that stays visible.
+  selectAllButton.focus();
 });
 
 extractButton.addEventListener('click', async () => {

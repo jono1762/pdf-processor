@@ -82,11 +82,6 @@ h1 {
   color: #52606d;
 }
 
-/* The page hint describes touch gestures, so only touch screens show it (see below) */
-#page-hint {
-  display: none;
-}
-
 #file-list {
   list-style: none;
   padding: 0;
@@ -198,6 +193,20 @@ button:disabled {
   display: none;
 }
 
+/* Hidden tools keep their space, so the thumbnails below don't move when a page is
+   selected and the next tap can't land on the wrong one. visibility: hidden also
+   means they can't be clicked, reached with the keyboard or read by screen readers. */
+#page-tools button[hidden] {
+  display: inline-block;
+  visibility: hidden;
+}
+
+/* Wide enough for its other label, "Clear selection", so changing label can't push
+   the buttons after it along or onto a new row */
+#select-all-button {
+  min-width: 7.5rem;
+}
+
 /* Each thumbnail is a button; reset the default button look so only the page shows */
 /* Not scoped to #page-grid: the copy that follows the pointer while dragging is
    added to <body>, so it must match these rules too */
@@ -272,6 +281,12 @@ footer {
     font-size: 1.75rem;
   }
 
+  /* Room for two lines even when the text only needs one, because a longer message
+     wraps here, and the thumbnails below shouldn't move when it changes */
+  #page-hint {
+    min-height: 2.5em;
+  }
+
   /* Two columns, so each thumbnail is large enough to read */
   #page-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -331,10 +346,5 @@ footer {
     min-width: 2.75rem;
     min-height: 2.75rem;
     margin-right: 0;
-  }
-
-  /* :not([hidden]) keeps it hidden until there are pages for it to describe */
-  #page-hint:not([hidden]) {
-    display: block;
   }
 }

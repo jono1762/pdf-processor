@@ -13,7 +13,7 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 - Reorder pages (drag-and-drop), rotate, delete
 - Merge multiple PDFs; extract selected pages into a new file
 - Download the result
-- "Try a sample" buttons using bundled sample documents
+- "Try a sample" buttons using generated sample documents
 
 **v1 is done when:**
 
@@ -58,13 +58,13 @@ UI polish:
 - End-to-end tests, run in Chromium, Firefox and WebKit, which also covers the Firefox and Safari check
 - Performance on large files (hundreds of pages)
 - Accessibility pass (keyboard use, screen reader labels, keyboard reordering)
-- README with demo GIF, feature list and key design decisions
+- README with demo GIF and key design decisions
 
 ## Sample documents
 
 Use content I create myself or that is public domain.
 
-- Multi-page digital PDF (reorder, merge, split)
+- Multi-page digital PDF (reorder, merge, extract)
 - Scanned printed page (OCR)
 - PDF with a sideways page (rotate)
 - Large PDF (performance)

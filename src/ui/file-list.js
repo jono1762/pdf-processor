@@ -177,7 +177,7 @@ for (const sample of SAMPLES) {
 // The page grid adds files too (extracted pages), so it needs a way to redraw the list
 setFileListRedraw(renderFileList);
 
-// Adds files to the end of the list. Used by the file picker, and later by drops.
+// Adds files to the end of the list. Used by the file picker and by drops.
 async function addFiles(files) {
   // Sort each file into one group, checking the type first, then the size.
   // `else if` means a non-PDF never has its size checked.

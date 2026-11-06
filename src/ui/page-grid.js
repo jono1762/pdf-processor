@@ -18,7 +18,8 @@ const previewStatus = document.querySelector('#preview-status');
 const previewError = document.querySelector('#preview-error');
 const pageHint = document.querySelector('#page-hint');
 
-// Roughly the width of one grid column, so thumbnails are drawn at about their shown size
+// Roughly the width of one grid column on a desktop screen, so thumbnails are drawn
+// at about their shown size there
 const THUMBNAIL_WIDTH = 320;
 
 // The file whose pages are actually drawn in the grid right now

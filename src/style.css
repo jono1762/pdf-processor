@@ -281,6 +281,22 @@ footer {
   }
 }
 
+/* Only for devices that can really hover, because on a touch screen a hover style
+   can stay stuck on a button after it is tapped */
+@media (hover: hover) {
+  /* Thumbnails are buttons too, but this would hide their selected highlight */
+  button:not(:disabled, .page-thumb):hover {
+    background: #dbeafe;
+    border-color: #2563eb;
+  }
+
+  /* Merge is already blue, so it goes a darker blue. Its white text stays readable. */
+  #merge-button:not(:disabled):hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+  }
+}
+
 /* Touch screens, whatever their width. "coarse" means the main pointer is imprecise,
    like a finger. 2.75rem (44px) is a common minimum size for something you tap. */
 @media (pointer: coarse) {

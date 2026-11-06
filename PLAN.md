@@ -38,7 +38,7 @@ Phone layout and touch controls:
 UI polish:
 
 - Favicon
-- Grey hover on buttons
+- Blue hover on buttons
 - Restyle the browser's "Choose Files" button to match the others
 - General polish
 

@@ -323,11 +323,6 @@ footer {
     flex: 1;
   }
 
-  /* Room at the end of the page, so the floating bar can't cover the last pages */
-  body {
-    padding-bottom: 6rem;
-  }
-
   /* Two equal columns for Select all and Download */
   #page-tools {
     display: grid;
@@ -342,6 +337,16 @@ footer {
   #merge-button {
     width: calc(50% - 0.25rem);
     min-width: 0;
+  }
+}
+
+/* Too narrow for all five page tools on one row: five at 9rem, four 0.5rem gaps and
+   the 1rem page margins add up to 49rem. So the selection tools float at this width,
+   which is wider than the phone layout above. */
+@media (max-width: 49rem) {
+  /* Room at the end of the page, so the floating bar can't cover the last pages */
+  body {
+    padding-bottom: 6rem;
   }
 
   /* A bar fixed to the bottom of the screen, so these tools are always in reach on a

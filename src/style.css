@@ -34,6 +34,13 @@ main {
   outline-offset: 2px;
 }
 
+/* The logo and the name sit on one line, centred against each other */
+h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 #drop-title {
   margin: 0 0 0.5rem;
   font-weight: 600;
@@ -253,6 +260,11 @@ footer {
 /* Phone-sized screens. This stays at the end of the file because, when rules are
    equally specific, the later one wins, so these replace the rules above. */
 @media (max-width: 40rem) {
+  /* Slightly smaller, so the logo and name fit on one line on a narrow phone */
+  h1 {
+    font-size: 1.75rem;
+  }
+
   /* Two columns, so each thumbnail is large enough to read */
   #page-grid {
     grid-template-columns: repeat(2, 1fr);

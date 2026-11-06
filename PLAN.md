@@ -37,7 +37,7 @@ Phone layout and touch controls:
 
 UI polish:
 
-- Favicon
+- Favicon, and the same logo beside the page title
 - Blue hover on buttons
 - Replace the browser's file picker button with one matching the others, which also removes its misleading "No file chosen" text
 - General polish

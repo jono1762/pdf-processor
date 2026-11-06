@@ -4,7 +4,7 @@ A free, open-source PDF toolkit that runs entirely in your browser.
 
 Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
-**Live demo:** https://jono1762.github.io/pdf-processor/ (tested in recent Chrome and Edge)
+**Live demo:** https://jono1762.github.io/pdf-processor/ (tested in recent desktop Chrome and Edge; real-phone testing is still to come)
 
 See [PLAN.md](PLAN.md) for the roadmap.
 
@@ -14,6 +14,7 @@ See [PLAN.md](PLAN.md) for the roadmap.
 - Select pages to rotate, delete, reorder (by dragging) or extract into a new file
 - Open files by choosing them or dropping them on the page (up to 200 MB each)
 - Built-in sample documents, so you can try it without your own files
+- Layout and controls adapted for phones and touch screens: tap a page to select it, press and hold to drag it
 
 ## Privacy
 

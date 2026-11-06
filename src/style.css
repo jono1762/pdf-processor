@@ -75,6 +75,7 @@ h1 {
 }
 
 #reorder-hint,
+#merge-hint,
 #page-hint {
   margin: 1rem 0 0;
   font-size: 0.875rem;
@@ -191,6 +192,12 @@ button:disabled {
   margin-top: 1.5rem;
 }
 
+/* The display: flex above would otherwise override the hidden attribute, because
+   the browser's own rule for hidden is weaker than any rule in this file */
+#page-tools[hidden] {
+  display: none;
+}
+
 /* Each thumbnail is a button; reset the default button look so only the page shows */
 /* Not scoped to #page-grid: the copy that follows the pointer while dragging is
    added to <body>, so it must match these rules too */
@@ -297,7 +304,7 @@ footer {
   }
 
   /* Merge is already blue, so it goes a darker blue. Its white text stays readable. */
-  #merge-button:not(:disabled):hover {
+  #merge-button:hover {
     background: #1d4ed8;
     border-color: #1d4ed8;
   }

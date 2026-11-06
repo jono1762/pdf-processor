@@ -40,6 +40,7 @@ UI polish:
 - Favicon, and the same logo beside the page title
 - Blue hover on buttons
 - Replace the browser's file picker button with one matching the others, which also removes its misleading "No file chosen" text
+- Only show controls once they can be used: Merge from two ticked files, the page tools from one file, with a hint saying how to get Merge while it's hidden
 - General polish
 
 **v1.0.2 is done when:**

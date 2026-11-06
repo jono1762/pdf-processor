@@ -24,6 +24,7 @@ const fileButton = document.querySelector('#file-button');
 const dropArea = document.querySelector('#drop-area');
 const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
+const mergeHint = document.querySelector('#merge-hint');
 const message = document.querySelector('#message');
 const sampleButtons = document.querySelector('#sample-buttons');
 const reorderHint = document.querySelector('#reorder-hint');
@@ -52,15 +53,22 @@ function filesToMerge() {
   return state.files.filter((file) => !file.excludedFromMerge);
 }
 
-// Says on the Merge button how many files it will merge, and disables it if that's
+// Says on the Merge button how many files it will merge, and hides it if that's
 // fewer than two
 function updateMergeButton() {
   const total = state.files.length;
   const count = filesToMerge().length;
-  mergeButton.disabled = count < 2;
-  if (total < 2) {
-    mergeButton.textContent = 'Merge';
-  } else if (count === total) {
+  mergeButton.hidden = count < 2;
+
+  // While Merge is hidden, say how to get it. With no files there's no hint, because
+  // the drop area already says what to do first.
+  mergeHint.hidden = total === 0 || count >= 2;
+  mergeHint.textContent =
+    total === 1
+      ? 'Add another PDF to merge them.'
+      : 'Tick at least two files to merge them.';
+
+  if (count === total) {
     mergeButton.textContent = `Merge ${count} files`;
   } else {
     mergeButton.textContent = `Merge ${count} of ${total} files`;

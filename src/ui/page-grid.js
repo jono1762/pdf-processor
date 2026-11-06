@@ -9,6 +9,7 @@ import { state } from './state.js';
 import { createSortable } from './sortable.js';
 
 const pageGrid = document.querySelector('#page-grid');
+const pageTools = document.querySelector('#page-tools');
 const selectAllButton = document.querySelector('#select-all-button');
 const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
@@ -70,6 +71,9 @@ const sortable = createSortable(pageGrid, {
 
 // Page tools only make sense with a previewed file, selected pages and no edit running
 function updatePageTools() {
+  // With no file there are no pages to act on, so the tools aren't shown at all
+  pageTools.hidden = !state.previewedFile;
+
   // One button for both jobs: it clears the selection once every page is selected
   const allSelected = pageCount > 0 && selectedPages.size === pageCount;
   selectAllButton.textContent = allSelected ? 'Clear selection' : 'Select all';

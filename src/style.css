@@ -85,7 +85,7 @@ h1 + p {
 
 /* All three match each other, and the page tools further down */
 #sample-buttons button {
-  min-width: 9rem;
+  min-width: 10rem;
 }
 
 /* Dashed box around the file picker; files can be dropped on it. It is the first
@@ -141,7 +141,7 @@ main:has(#drop-area:not(.has-files)) {
    style, leaving Merge as the one solid blue button. It is also the same width as
    the buttons in the file rows below it. */
 #drop-area.has-files #file-button {
-  min-width: 6.5rem;
+  min-width: 7.5rem;
   border-color: #9aa5b1;
   background: white;
   color: buttontext;
@@ -219,14 +219,17 @@ main:has(#drop-area:not(.has-files)) {
    the same width and nothing shifts when the previewed file changes. min-width
    (not width) lets a button grow if a larger font would otherwise cut off its text. */
 .file-actions button {
-  min-width: 6.5rem;
+  min-width: 7.5rem;
 }
 
+/* Browsers give buttons their own small font, so set them to use the page's font */
 button {
   padding: 0.4rem 0.9rem;
   border: 1px solid #9aa5b1;
   border-radius: 0.375rem;
   background: white;
+  font-family: inherit;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 
@@ -280,7 +283,7 @@ button:disabled {
    matches them, so its edges line up with the toolbar below it. */
 #merge-button,
 #page-tools button {
-  min-width: 9rem;
+  min-width: 10rem;
 }
 
 #selection-tools {
@@ -425,8 +428,10 @@ footer {
     grid-template-columns: 1fr 1fr;
   }
 
+  /* Less padding at the sides, so "Download this file" fits its column on a narrow phone */
   #page-tools button {
     min-width: 0;
+    padding-inline: 0.25rem;
   }
 
   /* The same width as one toolbar column: half the row, less half the 0.5rem gap */
@@ -436,10 +441,10 @@ footer {
   }
 }
 
-/* Too narrow for all five page tools on one row: five at 9rem, four 0.5rem gaps and
-   the 1rem page margins add up to 49rem. So the selection tools float at this width,
+/* Too narrow for all five page tools on one row: five at 10rem, four 0.5rem gaps and
+   the 1rem page margins add up to 54rem. So the selection tools float at this width,
    which is wider than the phone layout above. */
-@media (max-width: 49rem) {
+@media (max-width: 54rem) {
   /* Room at the end of the page, so the floating bar can't cover the last pages.
      :has() checks what's inside body, so this only applies once a file is open. */
   body:has(#page-tools:not([hidden])) {

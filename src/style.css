@@ -62,6 +62,11 @@ h1 {
   gap: 0.5rem;
 }
 
+/* Wide enough for the longest label, "Multi-page document", so all three match */
+#sample-buttons button {
+  min-width: 10.5rem;
+}
+
 /* Dashed box around the file picker; files can be dropped on it. It is the first
    thing to do on the page, so it is large, centred and stands out on white. */
 #drop-area {
@@ -351,6 +356,17 @@ footer {
   /* Each button takes an equal share of the row */
   .file-actions button {
     flex: 1;
+  }
+
+  /* Two wouldn't fit side by side at the same width on every phone, so all three
+     stack at full width */
+  #sample-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  #sample-buttons button {
+    min-width: 0;
   }
 
   /* Two equal columns for Select all and Download */

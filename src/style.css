@@ -62,9 +62,9 @@ h1 {
   gap: 0.5rem;
 }
 
-/* Wide enough for the longest label, "Multi-page document", so all three match */
+/* All three match each other, and the page tools further down */
 #sample-buttons button {
-  min-width: 10.5rem;
+  min-width: 9rem;
 }
 
 /* Dashed box around the file picker; files can be dropped on it. It is the first
@@ -358,15 +358,18 @@ footer {
     flex: 1;
   }
 
-  /* Two wouldn't fit side by side at the same width on every phone, so all three
-     stack at full width */
+  /* Three equal columns on one row, so the samples stay available without pushing
+     the pages further down the screen */
   #sample-buttons {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     width: 100%;
   }
 
+  /* Less padding at the sides, so each label fits its column on a narrow phone */
   #sample-buttons button {
     min-width: 0;
+    padding-inline: 0.25rem;
   }
 
   /* Two equal columns for Select all and Download */

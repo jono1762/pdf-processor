@@ -32,17 +32,17 @@ const reorderHint = document.querySelector('#reorder-hint');
 // The "Try a sample" buttons: what each says, what its file is called, how to make it
 const SAMPLES = [
   {
-    label: 'Multi-page document',
+    label: 'Multi-page',
     filename: 'sample-document.pdf',
     create: createMultiPageSample,
   },
   {
-    label: 'Sideways page',
+    label: 'Sideways',
     filename: 'sample-sideways-page.pdf',
     create: createSidewaysSample,
   },
   {
-    label: 'Large (300 pages)',
+    label: '300 pages',
     filename: 'sample-large.pdf',
     create: createLargeSample,
   },

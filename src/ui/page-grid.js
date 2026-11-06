@@ -16,6 +16,7 @@ const extractButton = document.querySelector('#extract-button');
 const downloadButton = document.querySelector('#download-button');
 const previewStatus = document.querySelector('#preview-status');
 const previewError = document.querySelector('#preview-error');
+const pageHint = document.querySelector('#page-hint');
 
 // Roughly the width of one grid column, so thumbnails are drawn at about their shown size
 const THUMBNAIL_WIDTH = 320;
@@ -36,6 +37,13 @@ let drawing = false;
 // Lets the user drag thumbnails to reorder them. Our job is to make the PDF match
 // once a drag ends.
 const sortable = createSortable(pageGrid, {
+  // Thumbnails fill a phone screen, so a touch must not start a drag straight away
+  // or swiping could never scroll the page. On touch, the finger must stay still
+  // for 200 milliseconds first. A mouse doesn't scroll by dragging, so it has no wait.
+  delay: 200,
+  delayOnTouchOnly: true,
+  // How many pixels a finger can wobble during the wait before it counts as a swipe
+  touchStartThreshold: 5,
   onStart({ item }) {
     // The floating copy under the pointer is made with cloneNode, which copies a
     // canvas element but not what is drawn on it. Draw the thumbnail onto the copy.
@@ -76,6 +84,8 @@ function updatePageTools() {
   downloadButton.disabled = editing || !state.previewedFile;
   // Dragging needs the full grid (the page numbers must match) and no edit running
   sortable.option('disabled', editing || drawing);
+  // The hint is about the thumbnails, so it needs a file with pages to refer to
+  pageHint.hidden = pageCount === 0;
 }
 
 // Shows a thumbnail of every page of the previewed file.

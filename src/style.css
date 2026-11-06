@@ -73,10 +73,16 @@ label {
   background: #eff6ff;
 }
 
-#reorder-hint {
+#reorder-hint,
+#page-hint {
   margin: 1rem 0 0;
   font-size: 0.875rem;
   color: #52606d;
+}
+
+/* The page hint describes touch gestures, so only touch screens show it (see below) */
+#page-hint {
+  display: none;
 }
 
 #file-list {
@@ -103,6 +109,8 @@ label {
   color: #9aa5b1;
   cursor: grab;
   user-select: none;
+  /* The browser leaves touches here to the page, so dragging the grip can't scroll */
+  touch-action: none;
 }
 
 #file-list input[type='checkbox'] {
@@ -197,6 +205,9 @@ button:disabled {
 /* Pages can be dragged to reorder them */
 .page-thumb {
   cursor: grab;
+  /* Stop a long press selecting the caption or opening the iPhone callout menu */
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* The gap where the dragged page will land: faded, so it reads as a placeholder */
@@ -294,5 +305,10 @@ footer {
     min-width: 2.75rem;
     min-height: 2.75rem;
     margin-right: 0;
+  }
+
+  /* :not([hidden]) keeps it hidden until there are pages for it to describe */
+  #page-hint:not([hidden]) {
+    display: block;
   }
 }

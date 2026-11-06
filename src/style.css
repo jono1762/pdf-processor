@@ -72,6 +72,36 @@ h1 {
   text-align: center;
 }
 
+/* With files added it shrinks to a slim row, title on the left and button on the
+   right. flex-wrap lets the button drop below the title if they don't both fit. */
+#drop-area.has-files {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  /* The file rows have a 1px border and 0.75rem of padding. This border is 2px, so
+     1px less padding on the sides lines the button up with the buttons in those rows. */
+  padding: 0.75rem calc(0.75rem - 1px);
+  text-align: left;
+}
+
+#drop-area.has-files #drop-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Adding more is no longer the main action, so the button goes back to the plain
+   style, leaving Merge as the one solid blue button. It is also the same width as
+   the buttons in the file rows below it. */
+#drop-area.has-files #file-button {
+  min-width: 6.5rem;
+  border-color: #9aa5b1;
+  background: white;
+  color: buttontext;
+  font-weight: normal;
+}
+
 /* Shown while files are being dragged over the box */
 #drop-area.drag-over {
   border-color: #2563eb;
@@ -388,6 +418,12 @@ footer {
   #merge-button:hover {
     background: #1d4ed8;
     border-color: #1d4ed8;
+  }
+
+  /* Plain once files are added, so it hovers like the other plain buttons */
+  #drop-area.has-files #file-button:hover {
+    border-color: #2563eb;
+    background: #dbeafe;
   }
 }
 

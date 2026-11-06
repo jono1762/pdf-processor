@@ -142,6 +142,9 @@ function renderFileList() {
     }),
   );
   updateMergeButton();
+  // Once there are files, adding more is no longer the main thing to do, so the CSS
+  // makes the drop area smaller and leaves more room for the pages
+  dropArea.classList.toggle('has-files', state.files.length > 0);
   // Choosing a merge order needs at least two files
   reorderHint.hidden = state.files.length < 2;
   // An old error is about the old list, so clear it whenever the list changes

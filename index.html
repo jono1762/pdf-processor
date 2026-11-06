@@ -19,8 +19,17 @@
       </p>
 
       <div id="drop-area">
-        <label for="file-input">Choose PDFs, or drop them here</label>
-        <input id="file-input" type="file" accept="application/pdf" multiple />
+        <p id="drop-title">Choose PDFs, or drop them here</p>
+        <button id="file-button" type="button">Choose files</button>
+        <!-- Hidden because it would say "No file chosen" even with files in the list.
+             It is emptied after each pick, so the same file can be picked again. -->
+        <input
+          id="file-input"
+          type="file"
+          accept="application/pdf"
+          multiple
+          hidden
+        />
       </div>
 
       <div class="sample-row">

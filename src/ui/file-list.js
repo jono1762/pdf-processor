@@ -20,6 +20,7 @@ import {
 } from './page-grid.js';
 
 const fileInput = document.querySelector('#file-input');
+const fileButton = document.querySelector('#file-button');
 const dropArea = document.querySelector('#drop-area');
 const fileList = document.querySelector('#file-list');
 const mergeButton = document.querySelector('#merge-button');
@@ -232,6 +233,9 @@ async function addFiles(files) {
     message.textContent = problems.join(' ');
   }
 }
+
+// The input is hidden, so this button opens its file chooser instead
+fileButton.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', () => {
   // fileInput.files is not a real array; Array.from copies it into one

@@ -2,7 +2,7 @@
 
 ## What this project is
 
-An open-source, browser-only PDF toolkit: merge, split, reorder, rotate and delete pages, and OCR scanned PDFs into searchable PDFs. It is a portfolio project for entry-level software engineering roles. See `PLAN.md` for the roadmap.
+An open-source, browser-only PDF toolkit: merge PDFs, extract, reorder, rotate and delete pages, and OCR scanned PDFs into searchable PDFs. It is a portfolio project for entry-level software engineering roles. See `PLAN.md` for the roadmap.
 
 ## Hard constraints
 
@@ -18,8 +18,8 @@ I'm keeping to languages I already know: plain JavaScript, HTML and CSS. No Type
 - Vite as the dev server and build tool (vanilla JavaScript template)
 - `pdf-lib` for editing and creating PDFs
 - `pdfjs-dist` for rendering pages and thumbnails
-- `sortablejs` for drag-and-drop reordering of pages
-- `tesseract.js` for OCR, run in a Web Worker
+- `sortablejs` for drag-and-drop reordering of pages and files
+- `tesseract.js` for OCR, run in a Web Worker (from v2, not yet installed)
 - Vitest for unit tests
 - Use modern JavaScript (ES modules). JSDoc comments on key functions are welcome where they make types clearer.
 
@@ -36,21 +36,21 @@ I'm learning while building, and I need to be able to explain every part of this
 - After a change, briefly explain what you did and why, including key trade-offs.
 - When there are several reasonable approaches, briefly list them with your recommendation instead of choosing silently.
 - Prefer simple, readable code over clever code. Add brief comments where intent or JavaScript behaviour isn't obvious, since I'm still learning the language.
-- Don't call something done unless it builds, lints and tests pass.
+- Don't call something done unless the build, lint, tests and format check all pass.
 - When we make a significant design decision, add a short entry to the Decisions log in `PLAN.md`.
 - When a change adds or alters something users can see or do, check that the page text (the intro and meta description in `index.html`), `README.md` and `PLAN.md` still match, and update them in the same branch.
 
 ## Git workflow
 
-- Each feature gets its own branch, built as a sequence of small commits (one step each, e.g. function, then tests, then edge cases). You commit after each step once I clear it, so stop after each one. Milestones are marked with version tags.
-- You implement; I review the code. When I explicitly clear an action (e.g. "commit this", "merge", "push", "tag"), you run it. Clearance covers only the action and change I named: approving a commit doesn't approve a merge or push, and approval for one change doesn't carry over to the next. Without clearance, never run `git commit`, `git push`, `git merge` or `git tag`.
+- Each feature gets its own branch, built as a sequence of small commits (one step each, e.g. function, then tests, then edge cases). You commit after each step once I clear it, so stop after each one. Milestones and releases are marked with version tags.
+- You implement; I review the code. When I explicitly clear an action (e.g. "commit this", "merge", "push", "tag"), you run it. Clearance covers only the action and change I named: approving a commit doesn't approve a merge or push, and approval for one change doesn't carry over to the next. Without clearance, never run `git commit`, `git push`, `git merge` or `git tag`. Pushing to `main` deploys to the live site.
 - At the start of a task, check the current branch. If it doesn't match the feature, tell me and suggest a branch name. Only create or switch branches when I clear it.
 - When a change is ready for review, suggest a short commit message.
 
 ## Code conventions
 
 - Keep PDF logic as plain functions in `src/lib/`, separate from the UI code, so it can be unit tested without the UI.
-- Code that touches the page (the DOM) lives in `src/ui/`: `file-list.js` (picker, list, merge), `page-grid.js` (thumbnails, selection, page tools, dragging), `download.js` (browser file helpers), `sortable.js` (shared drag-and-drop settings) and `state.js` (data shared between UI modules). `src/main.js` only imports.
+- Code that touches the page (the DOM) lives in `src/ui/`: `file-list.js` (picker, drops, samples, list, merge), `page-grid.js` (thumbnails, selection, page tools, dragging), `download.js` (browser file helpers), `sortable.js` (shared drag-and-drop settings) and `state.js` (data shared between UI modules). `src/main.js` only imports.
 - Heavy work (OCR, rendering many pages) must not block the main thread.
 - Fail visibly: encrypted, corrupted or very large files should show a clear message, never crash or fail silently.
 
@@ -62,8 +62,11 @@ I'm learning while building, and I need to be able to explain every part of this
 
 ## Commands
 
+In WSL, use nvm's Node (the version in `.nvmrc`), not the Windows install. If `which npm` shows a path under `/mnt/c/`, run `source ~/.nvm/nvm.sh` first.
+
 - `npm run dev`
 - `npm run build`
+- `npm run preview`
 - `npm test`
 - `npm run lint`
 - `npm run format`

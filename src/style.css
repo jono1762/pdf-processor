@@ -269,3 +269,30 @@ footer {
     flex: 1;
   }
 }
+
+/* Touch screens, whatever their width. "coarse" means the main pointer is imprecise,
+   like a finger. 2.75rem (44px) is a common minimum size for something you tap. */
+@media (pointer: coarse) {
+  /* "Choose Files" is part of the file input, not a real <button>, so it needs its
+     own selector. ::file-selector-button targets that part of the input. */
+  button,
+  #file-input::file-selector-button {
+    min-height: 2.75rem;
+  }
+
+  #file-list input[type='checkbox'] {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  /* A larger area to touch, with the grip centred in it. The area already provides
+     the space beside the checkbox, so the margin is no longer needed. */
+  .drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    margin-right: 0;
+  }
+}

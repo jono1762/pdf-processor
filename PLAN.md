@@ -43,6 +43,7 @@ UI polish:
 - Only show controls once they can be used, with a hint saying how to get the hidden ones: Merge from two ticked files, the page tools from one file, and Rotate, Delete and Extract once pages are selected
 - Make the drop area the focus of the page, with a blue "Choose files" button
 - Equal-width page tools, with Rotate, Extract and Delete in a floating bar on phones
+- Keep the scroll position when editing pages redraws the grid
 - General polish
 
 **v1.0.2 is done when:**

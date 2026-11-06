@@ -130,6 +130,11 @@ export async function renderPageGrid(force = false) {
     selectedPages.clear();
     pageCount = 0;
   }
+  // Redrawing empties the grid, which would shrink the page and make the browser
+  // scroll up. Holding its height keeps the user in place after editing a file.
+  // A different file starts from the top, so nothing is held for that.
+  pageGrid.style.minHeight =
+    file === drawnFile ? `${pageGrid.offsetHeight}px` : '';
   drawnFile = file;
   updatePageTools();
 
@@ -191,6 +196,8 @@ export async function renderPageGrid(force = false) {
     // We only need the document while drawing; this frees its memory in PDF.js
     pdfDoc?.loadingTask.destroy();
     if (thisRender === latestRender) {
+      // The new pages are in place, so the grid can take its real height again
+      pageGrid.style.minHeight = '';
       previewStatus.hidden = true;
       drawing = false;
       updatePageTools();

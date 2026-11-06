@@ -41,6 +41,7 @@ UI polish:
 - Blue hover on buttons
 - Replace the browser's file picker button with one matching the others, which also removes its misleading "No file chosen" text
 - Only show controls once they can be used, with a hint saying how to get the hidden ones: Merge from two ticked files, the page tools from one file, and Rotate, Delete and Extract once pages are selected
+- Make the drop area the focus of the page, with a blue "Choose files" button
 - General polish
 
 **v1.0.2 is done when:**

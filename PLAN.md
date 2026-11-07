@@ -6,7 +6,9 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 
 **Pitch:** Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
-## v1: Core page editor (done, tagged `v1`)
+## v1: Core page editor (in progress: real-phone testing is left)
+
+Core features:
 
 - Open one or more PDFs (file picker and drag-and-drop)
 - Page grid with thumbnails
@@ -14,19 +16,7 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 - Merge multiple PDFs; extract selected pages into a new file
 - Download the result
 - "Try a sample" buttons using generated sample documents
-
-**v1 is done when:**
-
-- There is a live deployed link
-- It works in recent Chrome and Edge (Firefox and Safari are checked later, in v3)
-- Core PDF operations have unit tests
-- The DevTools Network tab shows no file data being sent anywhere
-
-## v1.0.1: File size limit (done, tagged `v1.0.1`)
-
 - Reject files over 200 MB before reading them, with a clear message naming the skipped files
-
-## v1.0.2: Phones and UI polish (in progress)
 
 Phone layout and touch controls:
 
@@ -49,9 +39,12 @@ UI polish:
 - Buttons use the page font
 - Reset and Remove for each file, plus Reset all and Remove all, which all ask for confirmation first (Remove used to act straight away)
 
-**v1.0.2 is done when:**
+**v1 is done when:**
 
-- The polish is finished and deployed
+- There is a live deployed link
+- It works in recent Chrome and Edge (Firefox and Safari are checked later, in v3)
+- Core PDF operations have unit tests
+- The DevTools Network tab shows no file data being sent anywhere
 - The live site has been tested on a real phone, including the 300-page sample and downloads
 
 ## v2: OCR for scans

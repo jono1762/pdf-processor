@@ -48,7 +48,9 @@
           Drag ⠿ to change the merge order. Untick a file to leave it out.
         </p>
         <div id="list-actions">
-          <button id="remove-all-button" type="button">Remove all</button>
+          <button id="remove-all-button" class="danger" type="button">
+            Remove all
+          </button>
         </div>
       </div>
       <ul id="file-list"></ul>
@@ -82,6 +84,16 @@
         Only open PDFs you trust: this tool can't make a malicious file safe.
       </p>
     </footer>
+
+    <!-- Shared by every action that throws work away. autofocus starts on Cancel,
+         the safe choice. -->
+    <dialog id="confirm-dialog">
+      <p id="confirm-text"></p>
+      <div id="confirm-actions">
+        <button id="confirm-cancel" type="button" autofocus>Cancel</button>
+        <button id="confirm-button" class="danger" type="button"></button>
+      </div>
+    </dialog>
 
     <script type="module" src="/src/main.js"></script>
   </body>

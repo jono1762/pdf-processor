@@ -190,9 +190,13 @@ main:has(#drop-area:not(.has-files)) {
   margin-right: calc(0.75rem + 1px);
 }
 
-/* Red because it throws work away. The same width as the buttons in the file rows. */
+/* The same width as the buttons in the file rows */
 #remove-all-button {
   min-width: 7.5rem;
+}
+
+/* Red outline and text, for buttons that throw work away */
+.danger {
   border-color: #b91c1c;
   color: #b91c1c;
 }
@@ -402,6 +406,35 @@ footer {
   color: #52606d;
 }
 
+/* The browser centres a modal dialog, and limits its width so it fits on a phone.
+   Its text colour comes from the browser's own rule, so inherit the page's instead. */
+#confirm-dialog {
+  box-sizing: border-box;
+  width: 26rem;
+  padding: 1.25rem;
+  border: 1px solid #d9e2ec;
+  border-radius: 0.5rem;
+  color: inherit;
+}
+
+/* Dims the page behind the dialog */
+#confirm-dialog::backdrop {
+  background: rgba(31, 41, 51, 0.5);
+}
+
+#confirm-text {
+  margin: 0 0 1rem;
+  /* The question can include a long file name */
+  overflow-wrap: anywhere;
+}
+
+/* Two equal columns, so the buttons stay the same width whatever their labels say */
+#confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
 /* Phone-sized screens. This stays at the end of the file because, when rules are
    equally specific, the later one wins, so these replace the rules above. */
 @media (max-width: 40rem) {
@@ -444,7 +477,7 @@ footer {
   }
 
   /* The button drops below the hint. Half the width of the file row, so it lines up
-     with the left-hand button in those rows. The right margin matches the left. */
+     with the buttons in those rows. The margins match the row's border and padding. */
   #list-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -452,7 +485,9 @@ footer {
     margin-inline: calc(0.75rem + 1px);
   }
 
+  /* The right-hand column, directly above the Remove buttons in the file rows */
   #remove-all-button {
+    grid-column: 2;
     min-width: 0;
   }
 
@@ -540,8 +575,9 @@ footer {
     border-color: #1d4ed8;
   }
 
-  /* Red buttons stay red on hover, so they can't be mistaken for a safe action */
-  #remove-all-button:hover {
+  /* Red buttons stay red on hover, so they can't be mistaken for a safe action. The
+     "button" in this selector is needed to outrank the general hover rule above. */
+  button.danger:hover {
     background: #fee2e2;
     border-color: #b91c1c;
   }

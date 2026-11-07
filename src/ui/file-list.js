@@ -13,6 +13,7 @@ import {
 } from './download.js';
 import { state } from './state.js';
 import { createSortable } from './sortable.js';
+import { confirmAction } from './confirm.js';
 import {
   renderPageGrid,
   clearPreviewError,
@@ -48,6 +49,9 @@ const SAMPLES = [
     create: createLargeSample,
   },
 ];
+
+// Edits only exist in this page's memory, so removing a file loses them
+const LOST_CHANGES_WARNING = "Any changes you haven't downloaded will be lost.";
 
 // The files that Merge will use: every file except those the user has unticked
 function filesToMerge() {
@@ -127,11 +131,20 @@ function renderFileList() {
 
       const removeButton = document.createElement('button');
       removeButton.type = 'button';
+      removeButton.className = 'danger';
       removeButton.textContent = 'Remove';
-      removeButton.addEventListener('click', () => {
+      removeButton.addEventListener('click', async () => {
+        const confirmed = await confirmAction(
+          `Remove ${file.name}? ${LOST_CHANGES_WARNING}`,
+          'Remove',
+        );
+        if (!confirmed) return;
         // Keep every file except this one, then redraw
         state.files = state.files.filter((other) => other !== file);
         renderFileList();
+        // Redrawing removed this button, and keyboard focus would be lost with it.
+        // preventScroll stops the browser jumping up to the new focus.
+        fileButton.focus({ preventScroll: true });
       });
 
       const actions = document.createElement('div');
@@ -249,7 +262,12 @@ async function addFiles(files) {
 // The input is hidden, so this button opens its file chooser instead
 fileButton.addEventListener('click', () => fileInput.click());
 
-removeAllButton.addEventListener('click', () => {
+removeAllButton.addEventListener('click', async () => {
+  const confirmed = await confirmAction(
+    `Remove all ${state.files.length} files? ${LOST_CHANGES_WARNING}`,
+    'Remove all',
+  );
+  if (!confirmed) return;
   state.files = [];
   renderFileList();
   // This button is hidden now, and keyboard focus would be lost with it

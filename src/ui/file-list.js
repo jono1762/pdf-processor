@@ -16,6 +16,7 @@ import { createSortable } from './sortable.js';
 import { confirmAction } from './confirm.js';
 import {
   renderPageGrid,
+  resetFile,
   clearPreviewError,
   setFileListRedraw,
 } from './page-grid.js';
@@ -50,7 +51,7 @@ const SAMPLES = [
   },
 ];
 
-// Edits only exist in this page's memory, so removing a file loses them
+// Edits only exist in this page's memory, so removing or resetting a file loses them
 const LOST_CHANGES_WARNING = "Any changes you haven't downloaded will be lost.";
 
 // The files that Merge will use: every file except those the user has unticked
@@ -117,6 +118,25 @@ function renderFileList() {
       // textContent (not innerHTML) so a file name can never be treated as HTML
       name.textContent = file.name;
 
+      const resetButton = document.createElement('button');
+      resetButton.type = 'button';
+      resetButton.className = 'danger';
+      resetButton.textContent = 'Reset';
+      // Comparing the arrays themselves: every edit makes a new one, so they only
+      // match until the first edit. A file with no changes has nothing to reset.
+      resetButton.hidden = file.bytes === file.originalBytes;
+      resetButton.addEventListener('click', async () => {
+        const confirmed = await confirmAction(
+          `Reset ${file.name} to its original? ${LOST_CHANGES_WARNING}`,
+          'Reset',
+        );
+        if (!confirmed) return;
+        resetFile(file);
+        renderFileList();
+        // Redrawing removed this button, and keyboard focus would be lost with it
+        fileButton.focus({ preventScroll: true });
+      });
+
       const previewButton = document.createElement('button');
       previewButton.type = 'button';
       // The file already being previewed has nothing to switch to, so its button
@@ -149,7 +169,7 @@ function renderFileList() {
 
       const actions = document.createElement('div');
       actions.className = 'file-actions';
-      actions.append(previewButton, removeButton);
+      actions.append(resetButton, previewButton, removeButton);
       item.append(handle, include, name, actions);
 
       return item;
@@ -191,7 +211,10 @@ for (const sample of SAMPLES) {
     button.disabled = true;
     try {
       const bytes = await sample.create();
-      state.files = [...state.files, { name: sample.filename, bytes }];
+      state.files = [
+        ...state.files,
+        { name: sample.filename, bytes, originalBytes: bytes },
+      ];
       renderFileList();
     } finally {
       button.disabled = false;
@@ -226,10 +249,10 @@ async function addFiles(files) {
     try {
       // Read every file's bytes in parallel, keeping their order
       const added = await Promise.all(
-        accepted.map(async (file) => ({
-          name: file.name,
-          bytes: await readFileBytes(file),
-        })),
+        accepted.map(async (file) => {
+          const bytes = await readFileBytes(file);
+          return { name: file.name, bytes, originalBytes: bytes };
+        }),
       );
       // Adding to the list (not replacing it) lets the user add files in several rounds
       state.files = [...state.files, ...added];

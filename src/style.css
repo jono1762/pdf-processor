@@ -465,9 +465,12 @@ footer {
     margin-top: 0.5rem;
   }
 
-  /* Each button takes an equal share of the row */
+  /* Each button takes an equal share of the row, even with three in it. Less padding
+     at the sides, so the labels fit on a narrow phone. */
   .file-actions button {
     flex: 1;
+    min-width: 0;
+    padding-inline: 0.25rem;
   }
 
   /* Less padding than on larger screens, so the empty page fits a small phone without

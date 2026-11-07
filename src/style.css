@@ -166,9 +166,7 @@ main:has(#drop-area:not(.has-files)) {
    Being above the list, it doesn't move as files are added or removed. */
 #list-header {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 0.5rem;
   margin-top: 1rem;
 }
@@ -178,7 +176,9 @@ main:has(#drop-area:not(.has-files)) {
   display: none;
 }
 
+/* flex: 1 gives the hint all the space beside the buttons, and it wraps inside that */
 #reorder-hint {
+  flex: 1;
   margin: 0;
 }
 
@@ -186,12 +186,16 @@ main:has(#drop-area:not(.has-files)) {
    these buttons up with the buttons in those rows */
 #list-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 0.5rem;
+  /* Always room for both buttons (7.5rem each and the gap), so nothing in this row or
+     below it moves when Reset all appears */
+  min-width: 15.5rem;
   margin-right: calc(0.75rem + 1px);
 }
 
 /* The same width as the buttons in the file rows */
-#remove-all-button {
+#list-actions button {
   min-width: 7.5rem;
 }
 
@@ -479,19 +483,33 @@ footer {
     padding-block: 1.5rem;
   }
 
-  /* The button drops below the hint. Half the width of the file row, so it lines up
-     with the buttons in those rows. The margins match the row's border and padding. */
+  #list-header {
+    flex-wrap: wrap;
+  }
+
+  /* The whole first line, so the buttons drop below the hint */
+  #reorder-hint {
+    flex-basis: 100%;
+  }
+
+  /* Half the width of the file row each, so they line up with the buttons in those
+     rows. The margins match the row's border and padding. */
   #list-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     width: 100%;
+    min-width: 0;
     margin-inline: calc(0.75rem + 1px);
   }
 
-  /* The right-hand column, directly above the Remove buttons in the file rows */
+  #list-actions button {
+    min-width: 0;
+  }
+
+  /* The right-hand column, directly above the Remove buttons in the file rows. It stays
+     there when Reset all appears in the left-hand column. */
   #remove-all-button {
     grid-column: 2;
-    min-width: 0;
   }
 
   /* Three equal columns on one row, so the samples stay available without pushing

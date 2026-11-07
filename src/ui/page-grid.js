@@ -214,9 +214,15 @@ async function editPreviewedFile(verb, edit, keepSelection) {
   editing = true;
   updatePageTools();
   try {
+    const before = file.bytes;
+    const edited = await edit(before, [...selectedPages]);
+    // The user reset this file while the edit ran, so this result is out of date
+    if (file.bytes !== before) return;
     // Replace the file's bytes with the edited version
-    file.bytes = await edit(file.bytes, [...selectedPages]);
+    file.bytes = edited;
     if (!keepSelection) selectedPages.clear();
+    // The file now has changes to reset, so its row needs a Reset button
+    redrawFileList();
     await renderPageGrid(true);
   } catch (error) {
     // The screen may already show a change that didn't happen (a dragged page),
@@ -274,6 +280,8 @@ extractButton.addEventListener('click', async () => {
     const extracted = {
       name: extractedFilename(file.name, file.extractionCount),
       bytes,
+      // Resetting this file goes back to the pages it was created with
+      originalBytes: bytes,
       // Remembers the source, so later extractions can be grouped under it
       extractedFrom: file,
       // Its pages are also in the source, so merging everything would repeat them.
@@ -314,6 +322,16 @@ downloadButton.addEventListener('click', () => {
 let redrawFileList = () => {};
 export function setFileListRedraw(redraw) {
   redrawFileList = redraw;
+}
+
+// Puts a file back to what it started as. Its page numbers may change, so if its
+// pages are showing, the selection is cleared and they are redrawn.
+export function resetFile(file) {
+  file.bytes = file.originalBytes;
+  if (file === state.previewedFile) {
+    selectedPages.clear();
+    renderPageGrid(true);
+  }
 }
 
 // Lets other modules clear the preview error, e.g. when merging starts

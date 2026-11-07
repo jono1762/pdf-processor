@@ -162,6 +162,49 @@ main:has(#drop-area:not(.has-files)) {
   color: #52606d;
 }
 
+/* A header above the file list: the hint on the left, whole-list actions on the right.
+   Being above the list, it doesn't move as files are added or removed. */
+#list-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* The display: flex above would otherwise override the hidden attribute */
+#list-header[hidden] {
+  display: none;
+}
+
+/* flex: 1 gives the hint all the space beside the buttons, and it wraps inside that */
+#reorder-hint {
+  flex: 1;
+  margin: 0;
+}
+
+/* The file rows have a 1px border and 0.75rem of padding, so the same space here lines
+   these buttons up with the buttons in those rows */
+#list-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  /* Always room for both buttons (7.5rem each and the gap), so nothing in this row or
+     below it moves when Reset all appears */
+  min-width: 15.5rem;
+  margin-right: calc(0.75rem + 1px);
+}
+
+/* The same width as the buttons in the file rows */
+#list-actions button {
+  min-width: 7.5rem;
+}
+
+/* Red outline and text, for buttons that throw work away */
+.danger {
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
 #file-list {
   list-style: none;
   padding: 0;
@@ -367,6 +410,35 @@ footer {
   color: #52606d;
 }
 
+/* The browser centres a modal dialog, and limits its width so it fits on a phone.
+   Its text colour comes from the browser's own rule, so inherit the page's instead. */
+#confirm-dialog {
+  box-sizing: border-box;
+  width: 26rem;
+  padding: 1.25rem;
+  border: 1px solid #d9e2ec;
+  border-radius: 0.5rem;
+  color: inherit;
+}
+
+/* Dims the page behind the dialog */
+#confirm-dialog::backdrop {
+  background: rgba(31, 41, 51, 0.5);
+}
+
+#confirm-text {
+  margin: 0 0 1rem;
+  /* The question can include a long file name */
+  overflow-wrap: anywhere;
+}
+
+/* Two equal columns, so the buttons stay the same width whatever their labels say */
+#confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
 /* Phone-sized screens. This stays at the end of the file because, when rules are
    equally specific, the later one wins, so these replace the rules above. */
 @media (max-width: 40rem) {
@@ -397,15 +469,47 @@ footer {
     margin-top: 0.5rem;
   }
 
-  /* Each button takes an equal share of the row */
+  /* Each button takes an equal share of the row, even with three in it. Less padding
+     at the sides, so the labels fit on a narrow phone. */
   .file-actions button {
     flex: 1;
+    min-width: 0;
+    padding-inline: 0.25rem;
   }
 
   /* Less padding than on larger screens, so the empty page fits a small phone without
      scrolling and the footer keeps its space from the bottom of the screen */
   #drop-area {
     padding-block: 1.5rem;
+  }
+
+  #list-header {
+    flex-wrap: wrap;
+  }
+
+  /* The whole first line, so the buttons drop below the hint */
+  #reorder-hint {
+    flex-basis: 100%;
+  }
+
+  /* Half the width of the file row each, so they line up with the buttons in those
+     rows. The margins match the row's border and padding. */
+  #list-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    min-width: 0;
+    margin-inline: calc(0.75rem + 1px);
+  }
+
+  #list-actions button {
+    min-width: 0;
+  }
+
+  /* The right-hand column, directly above the Remove buttons in the file rows. It stays
+     there when Reset all appears in the left-hand column. */
+  #remove-all-button {
+    grid-column: 2;
   }
 
   /* Three equal columns on one row, so the samples stay available without pushing
@@ -490,6 +594,13 @@ footer {
   #merge-button:hover {
     background: #1d4ed8;
     border-color: #1d4ed8;
+  }
+
+  /* Red buttons stay red on hover, so they can't be mistaken for a safe action. The
+     "button" in this selector is needed to outrank the general hover rule above. */
+  button.danger:hover {
+    background: #fee2e2;
+    border-color: #b91c1c;
   }
 
   /* Plain once files are added, so it hovers like the other plain buttons */

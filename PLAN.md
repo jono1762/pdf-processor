@@ -6,7 +6,9 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 
 **Pitch:** Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
-## v1: Core page editor (done, tagged `v1`)
+## v1: Core page editor (in progress: real-phone testing is left)
+
+Core features:
 
 - Open one or more PDFs (file picker and drag-and-drop)
 - Page grid with thumbnails
@@ -14,19 +16,7 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 - Merge multiple PDFs; extract selected pages into a new file
 - Download the result
 - "Try a sample" buttons using generated sample documents
-
-**v1 is done when:**
-
-- There is a live deployed link
-- It works in recent Chrome and Edge (Firefox and Safari are checked later, in v3)
-- Core PDF operations have unit tests
-- The DevTools Network tab shows no file data being sent anywhere
-
-## v1.0.1: File size limit (done, tagged `v1.0.1`)
-
 - Reject files over 200 MB before reading them, with a clear message naming the skipped files
-
-## v1.0.2: Phones and UI polish (in progress)
 
 Phone layout and touch controls:
 
@@ -47,10 +37,14 @@ UI polish:
 - Keep the scroll position when editing pages redraws the grid
 - Remove spare space from empty elements, so the footer can sit closer to the content on short screens
 - Buttons use the page font
+- Reset and Remove for each file, plus Reset all and Remove all, which all ask for confirmation first (Remove used to act straight away)
 
-**v1.0.2 is done when:**
+**v1 is done when:**
 
-- The polish is finished and deployed
+- There is a live deployed link
+- It works in recent Chrome and Edge (Firefox and Safari are checked later, in v3)
+- Core PDF operations have unit tests
+- The DevTools Network tab shows no file data being sent anywhere
 - The live site has been tested on a real phone, including the 300-page sample and downloads
 
 ## v2: OCR for scans
@@ -88,7 +82,7 @@ _Add an entry for each significant decision: decision, reason, alternatives cons
 - **Client-side only.** Privacy is the core pitch, and it avoids hosting costs. Alternative: a backend with Python libraries, rejected because files would leave the device.
 - **Plain JavaScript, HTML and CSS; no TypeScript or UI framework.** The app is small with little UI state, so a framework would add weight without much benefit. Fewer dependencies means a smaller, faster site and less to maintain, and it keeps the focus on browser APIs, Web Workers and PDF handling. Alternatives: TypeScript and React, worth revisiting if the UI grows significantly.
 - **Strict Content-Security-Policy.** A policy in a `<meta>` tag makes the browser itself block requests to other servers, so the privacy promise is enforced and not only checked in DevTools. The key rule is `connect-src 'self'`, so `fetch`, XHR and WebSocket can only reach our own site. The rules live in `csp.js`, with unit tests that fail if an outside host, `unsafe-inline` or `unsafe-eval` is added, and a small Vite plugin in `vite.config.js` inserts the tag. It is a meta tag because GitHub Pages can't set headers. The dev server gets two extra allowances (a local WebSocket and inline styles) and the built site does not. `worker-src 'self' blob:` is for the PDF.js worker, and `'wasm-unsafe-eval'` allows WebAssembly (not `eval`) for PDF.js image decoders and, in v2, Tesseract. Alternative: rely only on code review and the Network tab, rejected because it is a promise rather than a guarantee. Limits: it can't stop the whole tab navigating to another address, and a meta tag can't set `frame-ancestors` or reporting, so it is defence in depth and not a proof.
-- **File list holds `{ name, bytes }`, not `File` objects.** A `File` can't be edited, and page edits (rotate, delete) produce new bytes. Reading the bytes once on add and replacing them after each edit means merge, preview and download always use the current version. Alternative: keep per-page rotation and deletion as state and apply it all at download time, rejected as more complicated. Trade-off: every file stays in memory as bytes, worth revisiting for large files.
+- **File list holds `{ name, bytes, originalBytes }`, not `File` objects.** A `File` can't be edited, and page edits (rotate, delete) produce new bytes. Reading the bytes once on add and replacing them after each edit means merge, preview and download always use the current version. Alternative: keep per-page rotation and deletion as state and apply it all at download time, rejected as more complicated. Trade-off: every file stays in memory as bytes, worth revisiting for large files.
 - **SortableJS for drag-and-drop page reordering.** It handles touch screens, animation and autoscroll, and works on plain DOM elements without a framework. The page thumbnails are `<button>` elements, and the browser's built-in drag-and-drop doesn't work on buttons in Firefox, so SortableJS is set to do the dragging itself (`forceFallback`). Alternatives: the browser's drag-and-drop API (no dependency, but no touch support and the Firefox button problem), and custom pointer-event code (works everywhere, but much more code to write and explain). Trade-off: one more dependency, about 41 kB added to the bundle.
 - **UI split into modules sharing one `state` object.** `main.js` had grown to over 300 lines doing five jobs. It is now `src/ui/file-list.js`, `src/ui/page-grid.js` and `src/ui/state.js`, with PDF logic staying in `src/lib/`. Modules can't reassign variables they import, so the shared data (`files`, `previewedFile`) lives in an exported object whose properties they change. The file list imports the grid, and the grid asks the list to redraw through a callback the list registers, so there are no circular imports. Alternatives: events between modules (more indirection than this size needs) and a class holding everything (nothing else here uses classes).
 - **Sample PDFs are generated in the browser, not committed.** The "Try a sample" buttons build their PDFs with `pdf-lib` when clicked, using functions in `src/lib/samples.js` that have unit tests. No binary files are stored in the repo, the content is always original, and the large sample doesn't bloat the download. Alternative: commit pre-made PDFs in a samples folder, which can look more realistic but adds binary files and still needs a generator script. The scanned-page sample for OCR will be added with v2.
@@ -100,3 +94,5 @@ _Add an entry for each significant decision: decision, reason, alternatives cons
 - **Controls are hidden until they can be used, with a hint saying how to get them.** Greyed-out buttons made the first view cluttered and looked unfinished. If a control is hidden because of something the user can change, a short hint says what to do, so nothing disappears unexplained. `disabled` is kept only for the moment an edit is running, because hiding buttons then would make them flicker. Alternative: keep showing disabled buttons, which is simpler and shows what the app can do, but adds clutter and doesn't say why a button is unavailable. The hint line stays in place, showing how many pages are selected, so the thumbnails don't move while selecting. Trade-off: the tools appear only after selecting a page, so the hint matters.
 - **A floating bar for selection tools on phones.** Showing Rotate, Extract and Delete inside the toolbar would either move the thumbnails under the user's finger or leave a blank gap while reserving space for them. A bar fixed to the bottom of the screen avoids both, and keeps the tools in reach while scrolling a long file. It is used up to 54rem (864px), the width where all five tools stop fitting on one row. Larger screens keep them in the toolbar, holding their space invisibly. Alternatives: disabled buttons (no gap, but three rows of greyed-out controls), swapping the hint for the buttons (nowhere left for the selected count) and letting the grid move (the next tap can land on the wrong page). Trade-off: the bar covers about 60px of the page while pages are selected.
 - **A real button opens a fully hidden file input.** The app empties the file input after each pick so the same file can be picked again, which made the browser's status text say "No file chosen" while files were in the list. The input now has the `hidden` attribute, and a `<button>` calls `fileInput.click()`. Alternatives: a styled `<label>` with a visually hidden input (tried, but the accessibility tree still exposed "No file chosen" to screen readers), making the text transparent (a hack with the same problem), not emptying the input (the text goes out of date when a file is removed, and the same file can't be picked twice) and blocking duplicate files (doesn't fix the text, and duplicates can be intentional). Trade-off: one small event listener, and it needs checking on iPhone Safari.
+- **One shared `<dialog>` confirms every action that throws work away.** Remove, Remove all, Reset and Reset all always ask first, because edits exist only in the page's memory and there is no undo. A modal `<dialog>` blocks the rest of the page and handles Esc and keyboard focus for free, and `confirmAction` in `src/ui/confirm.js` returns a promise, so callers just wait for the answer. Focus starts on Cancel, so pressing Enter straight away is safe. Its buttons use click handlers and not a `<form method="dialog">`, which needs less code, because the Content-Security-Policy sets `form-action 'none'` and the form couldn't be tested in Safari; if it were blocked, the buttons couldn't close the dialog. Alternatives: `window.confirm` (can't be styled or name the action on its button), an undo option instead of asking (nicer, but it means keeping every removed file in memory) and asking only when a file has edits (fewer prompts, but less predictable). Trade-off: an extra step for files with nothing to lose, which is worth revisiting if it gets annoying.
+- **Reset keeps the file's starting bytes, not a history of edits.** Each file stores `originalBytes` beside `bytes`. Both point to the same array until the first edit, so an unedited file uses no extra memory, and comparing the two with `!==` says whether a file has been edited. An extracted file's starting point is the pages it was created with, not its source. If the user resets a file during a running edit, the reset wins and the edit's result is dropped. Alternatives: multi-step undo (more useful, but holds every version in memory and needs more UI) and re-reading the file from disk (only possible for chosen files, and the browser may no longer allow it). Trade-offs: an edited file holds two versions in memory, and editing a file back to how it started, such as rotating a page four times, still counts as edited.

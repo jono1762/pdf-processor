@@ -13,8 +13,10 @@ import {
 } from './download.js';
 import { state } from './state.js';
 import { createSortable } from './sortable.js';
+import { confirmAction } from './confirm.js';
 import {
   renderPageGrid,
+  resetFile,
   clearPreviewError,
   setFileListRedraw,
 } from './page-grid.js';
@@ -27,7 +29,9 @@ const mergeButton = document.querySelector('#merge-button');
 const mergeHint = document.querySelector('#merge-hint');
 const message = document.querySelector('#message');
 const sampleButtons = document.querySelector('#sample-buttons');
-const reorderHint = document.querySelector('#reorder-hint');
+const listHeader = document.querySelector('#list-header');
+const resetAllButton = document.querySelector('#reset-all-button');
+const removeAllButton = document.querySelector('#remove-all-button');
 
 // The "Try a sample" buttons: what each says, what its file is called, how to make it
 const SAMPLES = [
@@ -48,9 +52,18 @@ const SAMPLES = [
   },
 ];
 
+// Edits only exist in this page's memory, so removing or resetting a file loses them
+const LOST_CHANGES_WARNING = "Any changes you haven't downloaded will be lost.";
+
 // The files that Merge will use: every file except those the user has unticked
 function filesToMerge() {
   return state.files.filter((file) => !file.excludedFromMerge);
+}
+
+// Comparing the arrays themselves: every edit makes a new one, so they only match
+// until the first edit
+function isEdited(file) {
+  return file.bytes !== file.originalBytes;
 }
 
 // Says on the Merge button how many files it will merge, and hides it if that's
@@ -112,6 +125,24 @@ function renderFileList() {
       // textContent (not innerHTML) so a file name can never be treated as HTML
       name.textContent = file.name;
 
+      const resetButton = document.createElement('button');
+      resetButton.type = 'button';
+      resetButton.className = 'danger';
+      resetButton.textContent = 'Reset';
+      // A file with no changes has nothing to reset
+      resetButton.hidden = !isEdited(file);
+      resetButton.addEventListener('click', async () => {
+        const confirmed = await confirmAction(
+          `Reset ${file.name} to its original? ${LOST_CHANGES_WARNING}`,
+          'Reset',
+        );
+        if (!confirmed) return;
+        resetFile(file);
+        renderFileList();
+        // Redrawing removed this button, and keyboard focus would be lost with it
+        fileButton.focus({ preventScroll: true });
+      });
+
       const previewButton = document.createElement('button');
       previewButton.type = 'button';
       // The file already being previewed has nothing to switch to, so its button
@@ -126,16 +157,25 @@ function renderFileList() {
 
       const removeButton = document.createElement('button');
       removeButton.type = 'button';
+      removeButton.className = 'danger';
       removeButton.textContent = 'Remove';
-      removeButton.addEventListener('click', () => {
+      removeButton.addEventListener('click', async () => {
+        const confirmed = await confirmAction(
+          `Remove ${file.name}? ${LOST_CHANGES_WARNING}`,
+          'Remove',
+        );
+        if (!confirmed) return;
         // Keep every file except this one, then redraw
         state.files = state.files.filter((other) => other !== file);
         renderFileList();
+        // Redrawing removed this button, and keyboard focus would be lost with it.
+        // preventScroll stops the browser jumping up to the new focus.
+        fileButton.focus({ preventScroll: true });
       });
 
       const actions = document.createElement('div');
       actions.className = 'file-actions';
-      actions.append(previewButton, removeButton);
+      actions.append(resetButton, previewButton, removeButton);
       item.append(handle, include, name, actions);
 
       return item;
@@ -145,8 +185,11 @@ function renderFileList() {
   // Once there are files, adding more is no longer the main thing to do, so the CSS
   // makes the drop area smaller and leaves more room for the pages
   dropArea.classList.toggle('has-files', state.files.length > 0);
-  // Choosing a merge order needs at least two files
-  reorderHint.hidden = state.files.length < 2;
+  // A merge order and "Remove all" only mean something with at least two files
+  listHeader.hidden = state.files.length < 2;
+  // Like "Remove all", it needs at least two files to act on. One edited file has its
+  // own Reset button in its row.
+  resetAllButton.hidden = state.files.filter(isEdited).length < 2;
   // An old error is about the old list, so clear it whenever the list changes
   message.textContent = '';
   renderPageGrid();
@@ -177,7 +220,10 @@ for (const sample of SAMPLES) {
     button.disabled = true;
     try {
       const bytes = await sample.create();
-      state.files = [...state.files, { name: sample.filename, bytes }];
+      state.files = [
+        ...state.files,
+        { name: sample.filename, bytes, originalBytes: bytes },
+      ];
       renderFileList();
     } finally {
       button.disabled = false;
@@ -212,10 +258,10 @@ async function addFiles(files) {
     try {
       // Read every file's bytes in parallel, keeping their order
       const added = await Promise.all(
-        accepted.map(async (file) => ({
-          name: file.name,
-          bytes: await readFileBytes(file),
-        })),
+        accepted.map(async (file) => {
+          const bytes = await readFileBytes(file);
+          return { name: file.name, bytes, originalBytes: bytes };
+        }),
       );
       // Adding to the list (not replacing it) lets the user add files in several rounds
       state.files = [...state.files, ...added];
@@ -247,6 +293,32 @@ async function addFiles(files) {
 
 // The input is hidden, so this button opens its file chooser instead
 fileButton.addEventListener('click', () => fileInput.click());
+
+resetAllButton.addEventListener('click', async () => {
+  const count = state.files.filter(isEdited).length;
+  const confirmed = await confirmAction(
+    `Reset ${count} edited files to their originals? ${LOST_CHANGES_WARNING}`,
+    'Reset all',
+  );
+  if (!confirmed) return;
+  // Only edited files, so a file with no changes keeps its selected pages
+  for (const file of state.files.filter(isEdited)) resetFile(file);
+  renderFileList();
+  // This button is hidden now, and keyboard focus would be lost with it
+  fileButton.focus({ preventScroll: true });
+});
+
+removeAllButton.addEventListener('click', async () => {
+  const confirmed = await confirmAction(
+    `Remove all ${state.files.length} files? ${LOST_CHANGES_WARNING}`,
+    'Remove all',
+  );
+  if (!confirmed) return;
+  state.files = [];
+  renderFileList();
+  // This button is hidden now, and keyboard focus would be lost with it
+  fileButton.focus();
+});
 
 fileInput.addEventListener('change', () => {
   // fileInput.files is not a real array; Array.from copies it into one

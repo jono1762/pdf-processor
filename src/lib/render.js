@@ -15,7 +15,13 @@ export async function openPdfForRendering(bytes) {
   try {
     // PDF.js takes over the memory it is given, which would empty `bytes` for
     // everyone else. Passing a copy (slice) keeps the original usable for merging.
-    return await pdfjs.getDocument({ data: bytes.slice() }).promise;
+    return await pdfjs.getDocument({
+      data: bytes.slice(),
+      // The folder holding the image decoders (see scripts/copy-pdfjs-assets.js).
+      // Without it, images that need them are skipped and pages draw blank, with
+      // no error. It must be a full address, as the worker runs from a different folder.
+      wasmUrl: new URL('wasm/', document.baseURI).href,
+    }).promise;
   } catch (error) {
     throw new Error(
       'The file could not be read. It may be corrupted or encrypted.',

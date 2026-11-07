@@ -5,6 +5,9 @@ node_modules/
 dist/
 dist-ssr/
 
+# Copied from node_modules by scripts/copy-pdfjs-assets.js
+public/wasm/
+
 # Test coverage
 coverage/
 

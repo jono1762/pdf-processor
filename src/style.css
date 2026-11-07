@@ -162,6 +162,41 @@ main:has(#drop-area:not(.has-files)) {
   color: #52606d;
 }
 
+/* A header above the file list: the hint on the left, whole-list actions on the right.
+   Being above the list, it doesn't move as files are added or removed. */
+#list-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* The display: flex above would otherwise override the hidden attribute */
+#list-header[hidden] {
+  display: none;
+}
+
+#reorder-hint {
+  margin: 0;
+}
+
+/* The file rows have a 1px border and 0.75rem of padding, so the same space here lines
+   these buttons up with the buttons in those rows */
+#list-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-right: calc(0.75rem + 1px);
+}
+
+/* Red because it throws work away. The same width as the buttons in the file rows. */
+#remove-all-button {
+  min-width: 7.5rem;
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
 #file-list {
   list-style: none;
   padding: 0;
@@ -408,6 +443,19 @@ footer {
     padding-block: 1.5rem;
   }
 
+  /* The button drops below the hint. Half the width of the file row, so it lines up
+     with the left-hand button in those rows. The right margin matches the left. */
+  #list-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    margin-inline: calc(0.75rem + 1px);
+  }
+
+  #remove-all-button {
+    min-width: 0;
+  }
+
   /* Three equal columns on one row, so the samples stay available without pushing
      the pages further down the screen */
   #sample-buttons {
@@ -490,6 +538,12 @@ footer {
   #merge-button:hover {
     background: #1d4ed8;
     border-color: #1d4ed8;
+  }
+
+  /* Red buttons stay red on hover, so they can't be mistaken for a safe action */
+  #remove-all-button:hover {
+    background: #fee2e2;
+    border-color: #b91c1c;
   }
 
   /* Plain once files are added, so it hovers like the other plain buttons */

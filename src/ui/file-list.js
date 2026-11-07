@@ -27,7 +27,8 @@ const mergeButton = document.querySelector('#merge-button');
 const mergeHint = document.querySelector('#merge-hint');
 const message = document.querySelector('#message');
 const sampleButtons = document.querySelector('#sample-buttons');
-const reorderHint = document.querySelector('#reorder-hint');
+const listHeader = document.querySelector('#list-header');
+const removeAllButton = document.querySelector('#remove-all-button');
 
 // The "Try a sample" buttons: what each says, what its file is called, how to make it
 const SAMPLES = [
@@ -145,8 +146,8 @@ function renderFileList() {
   // Once there are files, adding more is no longer the main thing to do, so the CSS
   // makes the drop area smaller and leaves more room for the pages
   dropArea.classList.toggle('has-files', state.files.length > 0);
-  // Choosing a merge order needs at least two files
-  reorderHint.hidden = state.files.length < 2;
+  // A merge order and "Remove all" only mean something with at least two files
+  listHeader.hidden = state.files.length < 2;
   // An old error is about the old list, so clear it whenever the list changes
   message.textContent = '';
   renderPageGrid();
@@ -247,6 +248,13 @@ async function addFiles(files) {
 
 // The input is hidden, so this button opens its file chooser instead
 fileButton.addEventListener('click', () => fileInput.click());
+
+removeAllButton.addEventListener('click', () => {
+  state.files = [];
+  renderFileList();
+  // This button is hidden now, and keyboard focus would be lost with it
+  fileButton.focus();
+});
 
 fileInput.addEventListener('change', () => {
   // fileInput.files is not a real array; Array.from copies it into one

@@ -72,10 +72,13 @@ const sortable = createSortable(pageGrid, {
     const [moved] = order.splice(oldIndex, 1);
     order.splice(newIndex, 0, moved);
 
+    const file = state.previewedFile;
     editPreviewedFile(
       'reorder pages in',
       (bytes) => reorderPages(bytes, order),
       false,
+      // SortableJS has already moved the thumbnail, so only the numbers need updating
+      () => (canUpdateInPlace(file) ? renumberPages() : renderPageGrid(true)),
     );
   },
 });
@@ -178,6 +181,9 @@ export async function renderPageGrid(force = false) {
       thumb.append(canvas, caption);
 
       thumb.addEventListener('click', () => {
+        // Found when clicked, not remembered from now: deleting or dragging pages
+        // moves this thumbnail without redrawing it
+        const i = pagePosition(thumb);
         // Selected pages: click once to add, click again to remove
         if (selectedPages.has(i)) {
           selectedPages.delete(i);
@@ -209,17 +215,33 @@ export async function renderPageGrid(force = false) {
   }
 }
 
+// Thumbnails are in page order, so a thumbnail's position is its page number
+function pagePosition(thumb) {
+  return [...pageGrid.querySelectorAll('.page-thumb')].indexOf(thumb);
+}
+
+// Rewrites each thumbnail's caption and highlight from its position, after pages
+// were deleted or moved without being redrawn
+function renumberPages() {
+  pageGrid.querySelectorAll('.page-thumb').forEach((thumb, i) => {
+    thumb.querySelector('span').textContent = `Page ${i + 1}`;
+    thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
+  });
+}
+
+// After an edit to `file`, says whether the grid can be updated in place instead of
+// redrawn from scratch. Not if it is still being drawn (some thumbnails don't exist
+// yet), or if the file was removed or stopped being previewed while the edit ran.
+function canUpdateInPlace(file) {
+  return !drawing && file === state.previewedFile && file === drawnFile;
+}
+
 // Redraws only the given pages of the previewed file, swapping each new picture into
 // its existing thumbnail. For edits that change how pages look but not their order
 // or count (rotating), so every other thumbnail and its click handler stay correct.
 // Much faster than redrawing a long file from scratch, and it doesn't flash.
 async function redrawPages(file, pages) {
-  // A full redraw handles the cases where the thumbnails can't simply be swapped:
-  // the grid is still being drawn, so some thumbnails don't exist yet, or the file
-  // was removed or stopped being previewed while the edit ran
-  if (drawing || file !== state.previewedFile || file !== drawnFile) {
-    return renderPageGrid(true);
-  }
+  if (!canUpdateInPlace(file)) return renderPageGrid(true);
 
   // A full redraw (e.g. the user reset or switched file) changes this, so stop
   const thisRender = latestRender;
@@ -280,10 +302,7 @@ selectAllButton.addEventListener('click', () => {
   if (selectEverything) {
     for (let i = 0; i < pageCount; i++) selectedPages.add(i);
   }
-  // Thumbnails are in page order, so a thumbnail's position in the list is its page number
-  pageGrid.querySelectorAll('.page-thumb').forEach((thumb, i) => {
-    thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
-  });
+  renumberPages();
   updatePageTools();
 });
 
@@ -300,7 +319,21 @@ rotateButton.addEventListener('click', () => {
 });
 
 deleteButton.addEventListener('click', async () => {
-  await editPreviewedFile('delete pages from', deletePages, false);
+  const file = state.previewedFile;
+  const pages = [...selectedPages];
+  await editPreviewedFile(
+    'delete pages from',
+    (bytes) => deletePages(bytes, pages),
+    false,
+    () => {
+      if (!canUpdateInPlace(file)) return renderPageGrid(true);
+      // The other pictures are still right, so just take out the deleted thumbnails
+      const thumbs = pageGrid.querySelectorAll('.page-thumb');
+      for (const i of pages) thumbs[i].remove();
+      pageCount -= pages.length;
+      renumberPages();
+    },
+  );
   // Deleting clears the selection, which hides this button. Keyboard focus would be
   // lost with it, so move focus to the nearest button that stays visible.
   // preventScroll stops the browser jumping up to that button.

@@ -354,6 +354,11 @@ body:has(#page-tools:not([hidden])) {
   padding-bottom: 5rem;
 }
 
+/* More room while the back-to-top button shows, so it can't cover the last pages */
+body:has(#top-button:not([hidden])) {
+  padding-bottom: 9rem;
+}
+
 html:has(#page-tools:not([hidden])) {
   scroll-padding-bottom: 5rem;
 }
@@ -362,6 +367,23 @@ html:has(#page-tools:not([hidden])) {
    the browser's own rule for hidden is weaker than any rule in this file */
 #page-tools[hidden] {
   display: none;
+}
+
+/* A round button floating just above the bar's right end, lined up with the page
+   content. It is inside the bar and positioned against it (absolute positioning takes
+   it out of the bar's grid), so it moves up by itself when the bar grows a second
+   row. "#page-tools" in the selector makes it outrank the bar's own button rules. */
+#page-tools #top-button {
+  position: absolute;
+  right: max(1rem, calc((100% - 64rem) / 2));
+  bottom: calc(100% + 0.75rem);
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border-color: #d9e2ec;
+  border-radius: 50%;
+  box-shadow: 0 0.25rem 1rem rgba(31, 41, 51, 0.15);
+  font-size: 1.25rem;
 }
 
 /* Wide enough for its longest label, e.g. "Merge 2 of 4 files" */
@@ -572,6 +594,10 @@ footer {
 @media (max-width: 54rem) {
   body:has(#page-tools:not([hidden])) {
     padding-bottom: 8rem;
+  }
+
+  body:has(#top-button:not([hidden])) {
+    padding-bottom: 12rem;
   }
 
   html:has(#page-tools:not([hidden])) {

@@ -24,6 +24,8 @@ const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
 const extractButton = document.querySelector('#extract-button');
 const resetButton = document.querySelector('#reset-button');
+const topButton = document.querySelector('#top-button');
+const fileButton = document.querySelector('#file-button');
 const downloadButton = document.querySelector('#download-button');
 const previewError = document.querySelector('#preview-error');
 const pageHint = document.querySelector('#page-hint');
@@ -432,6 +434,28 @@ extractButton.addEventListener('click', async () => {
   } catch (error) {
     previewError.textContent = `Can't extract pages from ${file.name}. ${error.message}`;
   }
+});
+
+// The back-to-top button shows once the page is scrolled more than a screen down.
+// passive: true promises the browser this listener never blocks scrolling, so
+// scrolling stays smooth.
+window.addEventListener(
+  'scroll',
+  () => {
+    topButton.hidden = window.scrollY < window.innerHeight;
+  },
+  { passive: true },
+);
+
+topButton.addEventListener('click', () => {
+  // Smooth, unless the user has asked their device for less motion
+  const reduceMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches;
+  window.scrollTo({ top: 0, behavior: reduceMotion ? 'instant' : 'smooth' });
+  // This button hides at the top, so give keyboard focus to the first control there.
+  // preventScroll stops it fighting the smooth scroll.
+  fileButton.focus({ preventScroll: true });
 });
 
 downloadButton.addEventListener('click', () => {

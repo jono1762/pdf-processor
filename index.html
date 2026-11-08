@@ -77,6 +77,17 @@
         <button id="rotate-button" type="button" hidden>Rotate</button>
         <button id="extract-button" type="button" hidden>Extract</button>
         <button id="delete-button" type="button" hidden>Delete</button>
+        <!-- Floats just above the bar once the page is scrolled down. The arrow is
+             decoration, so aria-label gives screen readers its name. -->
+        <button
+          id="top-button"
+          type="button"
+          aria-label="Back to top"
+          title="Back to top"
+          hidden
+        >
+          ↑
+        </button>
       </div>
       <!-- aria-live: screen readers announce changes, e.g. that pages are drawing -->
       <p id="page-hint" aria-live="polite" hidden></p>

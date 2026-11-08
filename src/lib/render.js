@@ -5,6 +5,11 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
+// The full address of a folder in public/pdfjs. PDF.js needs the trailing slash.
+function pdfjsFolder(name) {
+  return new URL(`pdfjs/${name}/`, document.baseURI).href;
+}
+
 /**
  * Opens a PDF for rendering. Open it once, then render as many pages as needed.
  * @param {Uint8Array} bytes - the PDF as bytes
@@ -17,10 +22,13 @@ export async function openPdfForRendering(bytes) {
     // everyone else. Passing a copy (slice) keeps the original usable for merging.
     return await pdfjs.getDocument({
       data: bytes.slice(),
-      // The folder holding the image decoders (see scripts/copy-pdfjs-assets.js).
-      // Without it, images that need them are skipped and pages draw blank, with
-      // no error. It must be a full address, as the worker runs from a different folder.
-      wasmUrl: new URL('wasm/', document.baseURI).href,
+      // Folders of files PDF.js loads only when a PDF needs them (copied there by
+      // scripts/copy-pdfjs-assets.js). Without them, the images or text that need
+      // them are skipped with no error. They must be full addresses, as the
+      // worker runs from a different folder.
+      wasmUrl: pdfjsFolder('wasm'),
+      standardFontDataUrl: pdfjsFolder('standard_fonts'),
+      cMapUrl: pdfjsFolder('cmaps'),
     }).promise;
   } catch (error) {
     throw new Error(

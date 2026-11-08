@@ -1,4 +1,8 @@
-import { openPdfForRendering, renderPageThumbnail } from '../lib/render.js';
+import {
+  openPdfForRendering,
+  getThumbnailSize,
+  renderPageThumbnail,
+} from '../lib/render.js';
 import { rotatePages } from '../lib/rotate.js';
 import { deletePages } from '../lib/delete.js';
 import { extractPages } from '../lib/extract.js';
@@ -19,7 +23,6 @@ const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
 const extractButton = document.querySelector('#extract-button');
 const downloadButton = document.querySelector('#download-button');
-const previewStatus = document.querySelector('#preview-status');
 const previewError = document.querySelector('#preview-error');
 const pageHint = document.querySelector('#page-hint');
 const main = document.querySelector('main');
@@ -116,8 +119,16 @@ function updatePageTools() {
   pageHint.textContent = pageHintText(noSelection, allSelected);
 }
 
-// Says how to get any hidden tools, or else how many pages are selected
+// Says how to get any hidden tools, or else how many pages are selected. While pages
+// are drawing, it says so here, in a line that is always there, rather than in a
+// separate line that would appear above the grid and push the thumbnails down.
 function pageHintText(noSelection, allSelected) {
+  if (drawing) {
+    const count = selectedPages.size;
+    return noSelection
+      ? 'Drawing pages… You can select pages now, and edit them once all are drawn.'
+      : `Drawing pages… ${count} selected. You can edit them once all are drawn.`;
+  }
   if (noSelection) return PAGE_HINT;
   if (allSelected) {
     return 'Every page is selected. A PDF needs at least one page, so Delete is hidden.';
@@ -139,9 +150,10 @@ export async function renderPageGrid(force = false) {
     selectedPages.clear();
     pageCount = 0;
   }
-  // Redrawing empties the grid, which would shrink the page and make the browser
-  // scroll up. Holding its height keeps the user in place after editing a file.
-  // A different file starts from the top, so nothing is held for that.
+  // Redrawing empties the grid until the new thumbnails are added, which would shrink
+  // the page and make the browser scroll up. Holding its height until then keeps the
+  // user in place after a reset. A different file starts from the top, so nothing is
+  // held for that.
   pageGrid.style.minHeight =
     file === drawnFile ? `${pageGrid.offsetHeight}px` : '';
   drawnFile = file;
@@ -152,51 +164,42 @@ export async function renderPageGrid(force = false) {
   // The error belongs to the previewed file, so it clears only when that file changes
   previewError.textContent = '';
   if (!file) {
-    previewStatus.hidden = true;
     drawing = false;
+    pageGrid.removeAttribute('aria-busy');
     updatePageTools();
     return;
   }
 
-  previewStatus.hidden = false;
   drawing = true;
+  // Tells screen readers the grid is still being filled in
+  pageGrid.setAttribute('aria-busy', 'true');
   updatePageTools();
   let pdfDoc;
   try {
     pdfDoc = await openPdfForRendering(file.bytes);
-    pageCount = pdfDoc.numPages;
-    updatePageTools();
+
+    // Every page gets its thumbnail straight away, as a blank page of the right size,
+    // and the pictures are drawn into them afterwards. So the grid has its full size
+    // from the start and doesn't grow while drawing, any page can be selected at once,
+    // and the page doesn't keep changing. (iPhone Safari ignores taps while new
+    // content keeps appearing, which made the page unresponsive while drawing.)
+    // Working out the sizes reads each page without drawing it, which is quick.
+    const sizes = [];
     for (let i = 0; i < pdfDoc.numPages; i++) {
-      const canvas = await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH);
+      sizes.push(await getThumbnailSize(pdfDoc, i, THUMBNAIL_WIDTH));
+      // The user changed the file list meanwhile, so stop
+      if (thisRender !== latestRender) return;
+    }
+    const canvases = sizes.map((size, i) => addThumbnail(i, size));
+    pageCount = pdfDoc.numPages;
+    // The grid has its full height again, so it no longer needs holding
+    pageGrid.style.minHeight = '';
+    updatePageTools();
+
+    for (let i = 0; i < pdfDoc.numPages; i++) {
+      await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH, canvases[i]);
       // The user changed the file list while we were drawing, so stop
       if (thisRender !== latestRender) return;
-
-      // A real button, so pages can be selected with the keyboard as well as the mouse
-      const thumb = document.createElement('button');
-      thumb.type = 'button';
-      thumb.className = 'page-thumb';
-      // After a forced redraw, pages that were selected stay selected
-      thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
-
-      const caption = document.createElement('span');
-      caption.textContent = `Page ${i + 1}`;
-      thumb.append(canvas, caption);
-
-      thumb.addEventListener('click', () => {
-        // Found when clicked, not remembered from now: deleting or dragging pages
-        // moves this thumbnail without redrawing it
-        const i = pagePosition(thumb);
-        // Selected pages: click once to add, click again to remove
-        if (selectedPages.has(i)) {
-          selectedPages.delete(i);
-        } else {
-          selectedPages.add(i);
-        }
-        // aria-pressed tells screen readers the state; the CSS uses it for the highlight
-        thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
-        updatePageTools();
-      });
-      pageGrid.append(thumb);
     }
   } catch (error) {
     // Only report errors for the current file, not one the user has moved on from
@@ -208,13 +211,49 @@ export async function renderPageGrid(force = false) {
     // We only need the document while drawing; this frees its memory in PDF.js
     pdfDoc?.loadingTask.destroy();
     if (thisRender === latestRender) {
-      // The new pages are in place, so the grid can take its real height again
+      // Also covers an error before the thumbnails were added
       pageGrid.style.minHeight = '';
-      previewStatus.hidden = true;
+      pageGrid.removeAttribute('aria-busy');
       drawing = false;
       updatePageTools();
     }
   }
+}
+
+// Adds a thumbnail for page `i` to the end of the grid, with a blank canvas of the
+// given size for the picture to be drawn into later. Returns that canvas.
+function addThumbnail(i, size) {
+  // A real button, so pages can be selected with the keyboard as well as the mouse
+  const thumb = document.createElement('button');
+  thumb.type = 'button';
+  thumb.className = 'page-thumb';
+  // After a forced redraw, pages that were selected stay selected
+  thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
+
+  // Until it is drawn, the canvas is blank, and the CSS shows it as a white page
+  const canvas = document.createElement('canvas');
+  canvas.width = size.width;
+  canvas.height = size.height;
+  const caption = document.createElement('span');
+  caption.textContent = `Page ${i + 1}`;
+  thumb.append(canvas, caption);
+
+  thumb.addEventListener('click', () => {
+    // Found when clicked, not remembered from now: deleting or dragging pages
+    // moves this thumbnail without redrawing it
+    const i = pagePosition(thumb);
+    // Selected pages: click once to add, click again to remove
+    if (selectedPages.has(i)) {
+      selectedPages.delete(i);
+    } else {
+      selectedPages.add(i);
+    }
+    // aria-pressed tells screen readers the state; the CSS uses it for the highlight
+    thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
+    updatePageTools();
+  });
+  pageGrid.append(thumb);
+  return canvas;
 }
 
 // Thumbnails are in page order, so a thumbnail's position is its page number

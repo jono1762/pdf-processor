@@ -74,9 +74,9 @@
         <button id="extract-button" type="button" hidden>Extract</button>
         <button id="delete-button" type="button" hidden>Delete</button>
       </div>
-      <p id="page-hint" hidden></p>
+      <!-- aria-live: screen readers announce changes, e.g. that pages are drawing -->
+      <p id="page-hint" aria-live="polite" hidden></p>
       <p id="preview-error" role="alert"></p>
-      <p id="preview-status" aria-live="polite" hidden>Rendering pages…</p>
       <section id="page-grid" aria-label="Page previews"></section>
     </main>
 

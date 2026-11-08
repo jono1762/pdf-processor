@@ -11,7 +11,7 @@ import {
   isTooLarge,
   MAX_FILE_BYTES,
 } from './download.js';
-import { state } from './state.js';
+import { state, isEdited } from './state.js';
 import { createSortable } from './sortable.js';
 import { confirmAction } from './confirm.js';
 import {
@@ -58,12 +58,6 @@ const LOST_CHANGES_WARNING = "Any changes you haven't downloaded will be lost.";
 // The files that Merge will use: every file except those the user has unticked
 function filesToMerge() {
   return state.files.filter((file) => !file.excludedFromMerge);
-}
-
-// Comparing the arrays themselves: every edit makes a new one, so they only match
-// until the first edit
-function isEdited(file) {
-  return file.bytes !== file.originalBytes;
 }
 
 // Says on the Merge button how many files it will merge, and hides it if that's

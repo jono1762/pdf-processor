@@ -4,7 +4,11 @@ import { deletePages } from '../lib/delete.js';
 import { extractPages } from '../lib/extract.js';
 import { reorderPages } from '../lib/reorder.js';
 import Sortable from 'sortablejs';
-import { downloadPdf, editedFilename, extractedFilename } from './download.js';
+import {
+  downloadPdf,
+  downloadFilename,
+  extractedFilename,
+} from './download.js';
 import { state } from './state.js';
 import { createSortable } from './sortable.js';
 
@@ -311,10 +315,7 @@ extractButton.addEventListener('click', async () => {
 });
 
 downloadButton.addEventListener('click', () => {
-  downloadPdf(
-    state.previewedFile.bytes,
-    editedFilename(state.previewedFile.name),
-  );
+  downloadPdf(state.previewedFile.bytes, downloadFilename(state.previewedFile));
 });
 
 // Set by file-list.js. It lets the grid ask for the file list to be redrawn without

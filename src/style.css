@@ -666,4 +666,11 @@ footer {
     min-height: 2.75rem;
     margin-right: 0;
   }
+
+  /* The dialog focuses Cancel when it opens, so pressing Enter straight away is safe.
+     iPhone Safari then shows the focus ring even though the dialog was opened with a
+     tap, so it looks as if Cancel was pressed. With touch, the ring isn't needed here. */
+  #confirm-dialog :focus-visible {
+    outline: none;
+  }
 }

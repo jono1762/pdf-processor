@@ -38,29 +38,57 @@ export async function openPdfForRendering(bytes) {
   }
 }
 
+// The viewport that draws a page exactly `width` CSS pixels wide.
+// High-resolution screens pack several real pixels into one CSS pixel
+// (devicePixelRatio is 2 on many laptops and phones). Drawing that many pixels
+// keeps the thumbnail sharp when CSS sets the displayed size.
+function thumbnailViewport(page, width) {
+  const pixelWidth = width * window.devicePixelRatio;
+  // Work out the scale that makes the page exactly `pixelWidth` pixels wide
+  const fullSize = page.getViewport({ scale: 1 });
+  return page.getViewport({ scale: pixelWidth / fullSize.width });
+}
+
 /**
- * Draws one page onto a new canvas, scaled to the given width.
+ * Works out the size in pixels of a page's thumbnail, without drawing it. Fast,
+ * so the grid can lay out every page before any is drawn.
  * @param {import('pdfjs-dist').PDFDocumentProxy} pdfDoc - from openPdfForRendering
  * @param {number} pageIndex - zero-based page number
  * @param {number} width - thumbnail width in CSS pixels
- * @returns {Promise<HTMLCanvasElement>}
+ * @returns {Promise<{ width: number, height: number }>}
  */
-export async function renderPageThumbnail(pdfDoc, pageIndex, width) {
+export async function getThumbnailSize(pdfDoc, pageIndex, width) {
   // PDF.js counts pages from 1, unlike the rest of our code
   const page = await pdfDoc.getPage(pageIndex + 1);
+  const viewport = thumbnailViewport(page, width);
+  return {
+    width: Math.floor(viewport.width),
+    height: Math.floor(viewport.height),
+  };
+}
 
-  // High-resolution screens pack several real pixels into one CSS pixel
-  // (devicePixelRatio is 2 on many laptops and phones). Drawing that many
-  // pixels keeps the thumbnail sharp when CSS sets the displayed size.
-  const pixelWidth = width * window.devicePixelRatio;
+/**
+ * Draws one page onto a canvas, scaled to the given width.
+ * @param {import('pdfjs-dist').PDFDocumentProxy} pdfDoc - from openPdfForRendering
+ * @param {number} pageIndex - zero-based page number
+ * @param {number} width - thumbnail width in CSS pixels
+ * @param {HTMLCanvasElement} [canvas] - a canvas already on the page to draw into;
+ *   a new one is made if none is given
+ * @returns {Promise<HTMLCanvasElement>}
+ */
+export async function renderPageThumbnail(pdfDoc, pageIndex, width, canvas) {
+  // No canvas given (e.g. when rotating): draw into a new one, which the caller
+  // swaps in once it is finished, so the thumbnail is never blank meanwhile
+  if (!canvas) canvas = document.createElement('canvas');
 
-  // Work out the scale that makes the page exactly `pixelWidth` pixels wide
-  const fullSize = page.getViewport({ scale: 1 });
-  const viewport = page.getViewport({ scale: pixelWidth / fullSize.width });
-
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.floor(viewport.width);
-  canvas.height = Math.floor(viewport.height);
+  const page = await pdfDoc.getPage(pageIndex + 1);
+  const viewport = thumbnailViewport(page, width);
+  const pixelWidth = Math.floor(viewport.width);
+  const pixelHeight = Math.floor(viewport.height);
+  // Setting a canvas's size clears it and changes the page, even to the same size,
+  // so only set it when it is different
+  if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+  if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
 
   await page.render({ canvas, viewport }).promise;
   return canvas;

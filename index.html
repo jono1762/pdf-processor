@@ -67,16 +67,31 @@
           Select all
         </button>
         <button id="download-button" type="button" disabled>
-          Download this file
+          Download file
+        </button>
+        <!-- Shown only while the previewed file has changes to reset -->
+        <button id="reset-button" class="danger" type="button" hidden>
+          Reset changes
         </button>
         <!-- Shown only while pages are selected -->
         <button id="rotate-button" type="button" hidden>Rotate</button>
         <button id="extract-button" type="button" hidden>Extract</button>
         <button id="delete-button" type="button" hidden>Delete</button>
+        <!-- Floats just above the bar once the page is scrolled down. The arrow is
+             decoration, so aria-label gives screen readers its name. -->
+        <button
+          id="top-button"
+          type="button"
+          aria-label="Back to top"
+          title="Back to top"
+          hidden
+        >
+          ↑
+        </button>
       </div>
-      <p id="page-hint" hidden></p>
+      <!-- aria-live: screen readers announce changes, e.g. that pages are drawing -->
+      <p id="page-hint" aria-live="polite" hidden></p>
       <p id="preview-error" role="alert"></p>
-      <p id="preview-status" aria-live="polite" hidden>Rendering pages…</p>
       <section id="page-grid" aria-label="Page previews"></section>
     </main>
 

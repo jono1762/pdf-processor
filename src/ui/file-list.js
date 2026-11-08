@@ -13,7 +13,7 @@ import {
 } from './download.js';
 import { state, isEdited } from './state.js';
 import { createSortable } from './sortable.js';
-import { confirmAction } from './confirm.js';
+import { confirmAction, LOST_CHANGES_WARNING } from './confirm.js';
 import {
   renderPageGrid,
   resetFile,
@@ -52,9 +52,6 @@ const SAMPLES = [
     create: createLargeSample,
   },
 ];
-
-// Edits only exist in this page's memory, so removing or resetting a file loses them
-const LOST_CHANGES_WARNING = "Any changes you haven't downloaded will be lost.";
 
 // The files that Merge will use: every file except those the user has unticked
 function filesToMerge() {
@@ -120,24 +117,6 @@ function renderFileList() {
       // textContent (not innerHTML) so a file name can never be treated as HTML
       name.textContent = file.name;
 
-      const resetButton = document.createElement('button');
-      resetButton.type = 'button';
-      resetButton.className = 'danger';
-      resetButton.textContent = 'Reset';
-      // A file with no changes has nothing to reset
-      resetButton.hidden = !isEdited(file);
-      resetButton.addEventListener('click', async () => {
-        const confirmed = await confirmAction(
-          `Reset ${file.name} to its original? ${LOST_CHANGES_WARNING}`,
-          'Reset',
-        );
-        if (!confirmed) return;
-        resetFile(file);
-        renderFileList();
-        // Redrawing removed this button, and keyboard focus would be lost with it
-        fileButton.focus({ preventScroll: true });
-      });
-
       const previewButton = document.createElement('button');
       previewButton.type = 'button';
       // The file already being previewed has nothing to switch to, so its button
@@ -170,7 +149,7 @@ function renderFileList() {
 
       const actions = document.createElement('div');
       actions.className = 'file-actions';
-      actions.append(resetButton, previewButton, removeButton);
+      actions.append(previewButton, removeButton);
       item.append(handle, include, name, actions);
 
       return item;
@@ -182,8 +161,8 @@ function renderFileList() {
   dropArea.classList.toggle('has-files', state.files.length > 0);
   // A merge order and "Remove all" only mean something with at least two files
   listHeader.hidden = state.files.length < 2;
-  // Like "Remove all", it needs at least two files to act on. One edited file has its
-  // own Reset button in its row.
+  // Like "Remove all", it needs at least two files to act on. One edited file is reset
+  // with Reset in the bottom bar while it is previewed.
   resetAllButton.hidden = state.files.filter(isEdited).length < 2;
   // An old error is about the old list, so clear it whenever the list changes
   message.textContent = '';

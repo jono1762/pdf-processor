@@ -1,3 +1,8 @@
+// Added to every question about throwing work away, because edits exist only in
+// the page's memory until they are downloaded
+export const LOST_CHANGES_WARNING =
+  "Any changes you haven't downloaded will be lost.";
+
 const dialog = document.querySelector('#confirm-dialog');
 const text = document.querySelector('#confirm-text');
 const cancelButton = document.querySelector('#confirm-cancel');

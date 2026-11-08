@@ -13,7 +13,8 @@ import {
   downloadFilename,
   extractedFilename,
 } from './download.js';
-import { state } from './state.js';
+import { state, isEdited } from './state.js';
+import { confirmAction, LOST_CHANGES_WARNING } from './confirm.js';
 import { createSortable } from './sortable.js';
 
 const pageGrid = document.querySelector('#page-grid');
@@ -22,6 +23,7 @@ const selectAllButton = document.querySelector('#select-all-button');
 const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
 const extractButton = document.querySelector('#extract-button');
+const resetButton = document.querySelector('#reset-button');
 const downloadButton = document.querySelector('#download-button');
 const previewError = document.querySelector('#preview-error');
 const pageHint = document.querySelector('#page-hint');
@@ -102,6 +104,8 @@ function updatePageTools() {
   extractButton.hidden = noSelection;
   // A PDF can't have zero pages, so deleting every page is not allowed
   deleteButton.hidden = noSelection || allSelected;
+  // A file with no changes has nothing to reset
+  resetButton.hidden = !state.previewedFile || !isEdited(state.previewedFile);
 
   // These wait for a running edit, so it can't overlap with another one, and for the
   // grid to finish drawing, so every thumbnail exists when the grid is updated after
@@ -110,6 +114,8 @@ function updatePageTools() {
   extractButton.disabled = busy || drawing;
   // Downloading needs a file but no selection; wait for a running edit so we get its result
   downloadButton.disabled = busy || !state.previewedFile;
+  // Resetting during an edit would race with it
+  resetButton.disabled = busy;
   // Dragging needs the full grid (the page numbers must match) and no edit running
   sortable.option('disabled', busy || drawing);
 
@@ -430,6 +436,20 @@ extractButton.addEventListener('click', async () => {
 
 downloadButton.addEventListener('click', () => {
   downloadPdf(state.previewedFile.bytes, downloadFilename(state.previewedFile));
+});
+
+resetButton.addEventListener('click', async () => {
+  const file = state.previewedFile;
+  const confirmed = await confirmAction(
+    `Reset ${file.name} to its original? ${LOST_CHANGES_WARNING}`,
+    'Reset',
+  );
+  if (!confirmed) return;
+  resetFile(file);
+  // The file list's Reset all button depends on how many files have changes
+  redrawFileList();
+  // Resetting hides this button, and keyboard focus would be lost with it
+  selectAllButton.focus({ preventScroll: true });
 });
 
 // Set by file-list.js. It lets the grid ask for the file list to be redrawn without

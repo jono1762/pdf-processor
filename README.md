@@ -13,7 +13,7 @@ See [PLAN.md](PLAN.md) for the roadmap.
 - Merge the PDFs you choose, in the order you want (drag to reorder)
 - Select pages to rotate, delete, reorder (by dragging) or extract into a new file
 - Open files by choosing them or dropping them on the page (up to 200 MB each)
-- Reset an edited file to its original, or remove it, one file at a time or all at once, with a confirmation first
+- Reset the previewed file to its original, or remove a file, one at a time or all at once, with a confirmation first
 - Built-in sample documents, so you can try it without your own files
 - Layout and controls adapted for phones and touch screens: tap a page to select it, press and hold to drag it
 

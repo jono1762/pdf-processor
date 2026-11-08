@@ -307,12 +307,37 @@ button:disabled {
   margin-top: 1.5rem;
 }
 
+/* A bar fixed to the bottom of the screen at every width, so the page tools are
+   always in reach on a long file without scrolling back up. It floats over the page,
+   so it never moves the thumbnails. safe-area-inset-bottom keeps it clear of the
+   iPhone's home bar. The side padding lines the buttons up with the page content,
+   which is at most 64rem wide and centred. */
 #page-tools {
-  display: flex;
-  /* Buttons that don't fit move to the next line, instead of widening the page */
-  flex-wrap: wrap;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  /* Five equal columns, one per tool. minmax(0, 1fr) keeps them equal even when one
+     label is longer, because a plain 1fr column won't shrink below its content. */
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.5rem;
-  margin-top: 1.5rem;
+  padding: 0.5rem max(1rem, calc((100% - 64rem) / 2))
+    max(0.5rem, env(safe-area-inset-bottom));
+  border-top: 1px solid #d9e2ec;
+  background: white;
+  box-shadow: 0 -0.25rem 1rem rgba(31, 41, 51, 0.15);
+}
+
+/* Room at the end of the page, so the bar can't cover the last pages or the footer.
+   :has() checks what's inside, so this only applies once a file is open. The scroll
+   padding does the same when keyboard focus scrolls a thumbnail into view. */
+body:has(#page-tools:not([hidden])) {
+  padding-bottom: 5rem;
+}
+
+html:has(#page-tools:not([hidden])) {
+  scroll-padding-bottom: 5rem;
 }
 
 /* The display: flex above would otherwise override the hidden attribute, because
@@ -321,27 +346,26 @@ button:disabled {
   display: none;
 }
 
-/* Wide enough for the longest label, "Download this file", so every tool is the same
-   width and changing "Select all" to "Clear selection" can't move the others. Merge
-   matches them, so its edges line up with the toolbar below it. */
-#merge-button,
-#page-tools button {
+/* Wide enough for the longest label, "Download this file" */
+#merge-button {
   min-width: 10rem;
 }
 
-#selection-tools {
-  display: flex;
-  gap: 0.5rem;
+/* Hidden tools leave the grid (the browser's own rule for [hidden]), so the columns
+   follow how many are showing. :has() checks which buttons are hidden. The bar floats
+   over the page, so it rearranging or growing can't move the thumbnails. */
+
+/* Every page selected: Delete is hidden, and the four tools left share the width.
+   Select all keeps its left edge, so the place just pressed is still on it. */
+#page-tools:has(#delete-button[hidden]) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-/* The tools for selected pages keep their space while hidden, so that the thumbnails
-   can't move when a page is selected and the next click can't land on the wrong one.
-   visibility: hidden also means they can't be clicked, reached with the keyboard or
-   read by screen readers. Phones use a floating bar instead (see below). */
-#selection-tools[hidden],
-#delete-button[hidden] {
-  display: flex;
-  visibility: hidden;
+/* No page selected: only Select all and Download, sharing the whole width (on narrower
+   screens, the second row goes until it's needed). This comes second so it wins,
+   because Delete is hidden then too. */
+#page-tools:has(#rotate-button[hidden]) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* Each thumbnail is a button; reset the default button look so only the page shows */
@@ -526,12 +550,6 @@ footer {
     padding-inline: 0.25rem;
   }
 
-  /* Two equal columns for Select all and Download */
-  #page-tools {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
   /* Less padding at the sides, so "Download this file" fits its column on a narrow phone */
   #page-tools button {
     min-width: 0;
@@ -546,37 +564,39 @@ footer {
 }
 
 /* Too narrow for all five page tools on one row: five at 10rem, four 0.5rem gaps and
-   the 1rem page margins add up to 54rem. So the selection tools float at this width,
-   which is wider than the phone layout above. */
+   the 1rem side padding add up to 54rem. So the selection tools take a second row,
+   which appears once a page is selected. The end-of-page space allows for both rows. */
 @media (max-width: 54rem) {
-  /* Room at the end of the page, so the floating bar can't cover the last pages.
-     :has() checks what's inside body, so this only applies once a file is open. */
   body:has(#page-tools:not([hidden])) {
-    padding-bottom: 6rem;
+    padding-bottom: 8rem;
   }
 
-  /* A bar fixed to the bottom of the screen, so these tools are always in reach on a
-     long file, and they don't take up space on the page or move the thumbnails.
-     safe-area-inset-bottom keeps it clear of the iPhone's home bar. */
-  #selection-tools {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    padding: 0.5rem 1rem max(0.5rem, env(safe-area-inset-bottom));
-    border-top: 1px solid #d9e2ec;
-    background: white;
-    box-shadow: 0 -0.25rem 1rem rgba(31, 41, 51, 0.15);
+  html:has(#page-tools:not([hidden])) {
+    scroll-padding-bottom: 8rem;
   }
 
-  #selection-tools button {
-    flex: 1;
+  /* Two rows on a grid of six columns: Select all and Download take three columns
+     each, then Rotate, Extract and Delete take two each, so each row is shared evenly.
+     With Delete hidden, Rotate and Extract take three each instead. */
+  #page-tools,
+  #page-tools:has(#delete-button[hidden]),
+  #page-tools:has(#rotate-button[hidden]) {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
-  /* Hidden tools take no space here, because the bar floats over the page */
-  #selection-tools[hidden],
-  #delete-button[hidden] {
-    display: none;
+  #select-all-button,
+  #download-button {
+    grid-column: span 3;
+  }
+
+  #rotate-button,
+  #extract-button,
+  #delete-button {
+    grid-column: span 2;
+  }
+
+  #page-tools:has(#delete-button[hidden]) :is(#rotate-button, #extract-button) {
+    grid-column: span 3;
   }
 }
 

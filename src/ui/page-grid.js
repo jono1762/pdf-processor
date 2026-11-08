@@ -14,7 +14,6 @@ import { createSortable } from './sortable.js';
 
 const pageGrid = document.querySelector('#page-grid');
 const pageTools = document.querySelector('#page-tools');
-const selectionTools = document.querySelector('#selection-tools');
 const selectAllButton = document.querySelector('#select-all-button');
 const rotateButton = document.querySelector('#rotate-button');
 const deleteButton = document.querySelector('#delete-button');
@@ -94,10 +93,12 @@ function updatePageTools() {
   selectAllButton.textContent = allSelected ? 'Clear selection' : 'Select all';
   selectAllButton.disabled = editing || pageCount === 0;
 
+  // The tools for selected pages are shown only while there is a selection
   const noSelection = selectedPages.size === 0;
-  selectionTools.hidden = noSelection;
+  rotateButton.hidden = noSelection;
+  extractButton.hidden = noSelection;
   // A PDF can't have zero pages, so deleting every page is not allowed
-  deleteButton.hidden = allSelected;
+  deleteButton.hidden = noSelection || allSelected;
 
   // These wait for a running edit, so it can't overlap with another one
   rotateButton.disabled = editing;

@@ -69,12 +69,10 @@
         <button id="download-button" type="button" disabled>
           Download this file
         </button>
-        <!-- Grouped so that on phones they can float together at the bottom of the screen -->
-        <div id="selection-tools" hidden>
-          <button id="rotate-button" type="button">Rotate</button>
-          <button id="extract-button" type="button">Extract</button>
-          <button id="delete-button" type="button">Delete</button>
-        </div>
+        <!-- Shown only while pages are selected -->
+        <button id="rotate-button" type="button" hidden>Rotate</button>
+        <button id="extract-button" type="button" hidden>Extract</button>
+        <button id="delete-button" type="button" hidden>Delete</button>
       </div>
       <p id="page-hint" hidden></p>
       <p id="preview-error" role="alert"></p>

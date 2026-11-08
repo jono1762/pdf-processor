@@ -19,6 +19,7 @@ import {
   resetFile,
   clearPreviewError,
   setFileListRedraw,
+  runLocked,
 } from './page-grid.js';
 
 const fileInput = document.querySelector('#file-input');
@@ -365,7 +366,10 @@ mergeButton.addEventListener('click', async () => {
     const pdfs = chosen.map((file) => file.bytes);
     // The names let the error say which files are bad
     const names = chosen.map((file) => file.name);
-    downloadPdf(await mergePdfs(pdfs, names), 'merged.pdf');
+    // Locked like an edit, so nothing changes until the merged file is ready.
+    // An error comes out after unlocking, so screen readers announce it.
+    const merged = await runLocked(() => mergePdfs(pdfs, names));
+    downloadPdf(merged, 'merged.pdf');
   } catch (error) {
     // Our own functions throw messages written for users, so show them as they are
     message.textContent = error.message;

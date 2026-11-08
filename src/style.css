@@ -290,6 +290,20 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* While an edit or a merge runs, the page above the bar is inert and the bar's tools
+   are disabled (see runLocked in page-grid.js). Both grey out only if it takes longer
+   than 0.4 seconds: most edits finish sooner, and greying at once would make the whole
+   page flash on every one. The delay is only on the way in, so the page comes straight
+   back when it ends. */
+main > [inert] {
+  opacity: 0.5;
+  transition: opacity 0.2s 0.4s;
+}
+
+#page-tools button:disabled {
+  transition: opacity 0.2s 0.4s;
+}
+
 /* The only button here that gets disabled is "Previewing". It reports a status,
    so it stays readable instead of fading like an unavailable button. */
 .file-actions button:disabled {

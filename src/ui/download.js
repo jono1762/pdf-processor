@@ -1,3 +1,5 @@
+import { isEdited } from './state.js';
+
 /**
  * Reads a File the user picked into bytes.
  * @param {File} file
@@ -35,6 +37,26 @@ export const MAX_FILE_BYTES = 200 * 1024 * 1024;
 export function isTooLarge(file) {
   // File.size is known without reading the file, so this check is instant
   return file.size > MAX_FILE_BYTES;
+}
+
+/**
+ * Makes sure a name ends in ".pdf", e.g. "notes" becomes "notes.pdf". A dropped
+ * file can count as a PDF by its type alone, so its name may have no extension.
+ * @param {string} name - the original file name
+ * @returns {string}
+ */
+export function pdfFilename(name) {
+  return /\.pdf$/i.test(name) ? name : `${name}.pdf`;
+}
+
+/**
+ * The name to download a file from the list as: its own name, with "-edited"
+ * added only if it has been changed, so an untouched file keeps its name.
+ * @param {{ name: string, bytes: Uint8Array, originalBytes: Uint8Array }} file
+ * @returns {string}
+ */
+export function downloadFilename(file) {
+  return isEdited(file) ? editedFilename(file.name) : pdfFilename(file.name);
 }
 
 /**

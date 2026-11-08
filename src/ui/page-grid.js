@@ -100,10 +100,11 @@ function updatePageTools() {
   // A PDF can't have zero pages, so deleting every page is not allowed
   deleteButton.hidden = noSelection || allSelected;
 
-  // These wait for a running edit, so it can't overlap with another one
-  rotateButton.disabled = editing;
-  deleteButton.disabled = editing;
-  extractButton.disabled = editing;
+  // These wait for a running edit, so it can't overlap with another one, and for the
+  // grid to finish drawing, so every thumbnail exists when the grid is updated after
+  rotateButton.disabled = editing || drawing;
+  deleteButton.disabled = editing || drawing;
+  extractButton.disabled = editing || drawing;
   // Downloading needs a file but no selection; wait for a running edit so we get its result
   downloadButton.disabled = editing || !state.previewedFile;
   // Dragging needs the full grid (the page numbers must match) and no edit running
@@ -231,8 +232,10 @@ function renumberPages() {
 }
 
 // After an edit to `file`, says whether the grid can be updated in place instead of
-// redrawn from scratch. Not if it is still being drawn (some thumbnails don't exist
-// yet), or if the file was removed or stopped being previewed while the edit ran.
+// redrawn from scratch. Not if the file was removed or stopped being previewed while
+// the edit ran, or if the grid is being drawn again: edits can't start while it is
+// drawing, but switching to another file and back during an edit starts a new
+// drawing of this file, from its old bytes, and some thumbnails don't exist yet.
 function canUpdateInPlace(file) {
   return !drawing && file === state.previewedFile && file === drawnFile;
 }

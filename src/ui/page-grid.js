@@ -209,11 +209,45 @@ export async function renderPageGrid(force = false) {
   }
 }
 
+// Redraws only the given pages of the previewed file, swapping each new picture into
+// its existing thumbnail. For edits that change how pages look but not their order
+// or count (rotating), so every other thumbnail and its click handler stay correct.
+// Much faster than redrawing a long file from scratch, and it doesn't flash.
+async function redrawPages(file, pages) {
+  // A full redraw handles the cases where the thumbnails can't simply be swapped:
+  // the grid is still being drawn, so some thumbnails don't exist yet, or the file
+  // was removed or stopped being previewed while the edit ran
+  if (drawing || file !== state.previewedFile || file !== drawnFile) {
+    return renderPageGrid(true);
+  }
+
+  // A full redraw (e.g. the user reset or switched file) changes this, so stop
+  const thisRender = latestRender;
+  let pdfDoc;
+  try {
+    pdfDoc = await openPdfForRendering(file.bytes);
+    const thumbs = pageGrid.querySelectorAll('.page-thumb');
+    for (const i of pages) {
+      const canvas = await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH);
+      if (thisRender !== latestRender) return;
+      thumbs[i].querySelector('canvas').replaceWith(canvas);
+    }
+  } finally {
+    pdfDoc?.loadingTask.destroy();
+  }
+}
+
 // Runs an edit on the previewed file, then redraws the grid. `edit` gets the file's
 // bytes and the selected page numbers. `verb` is only used in the error message.
 // `keepSelection` is for edits that don't change page numbers (rotating); after
-// deleting or reordering, the old numbers are wrong.
-async function editPreviewedFile(verb, edit, keepSelection) {
+// deleting or reordering, the old numbers are wrong. `redraw` updates the grid
+// afterwards, and by default redraws every page.
+async function editPreviewedFile(
+  verb,
+  edit,
+  keepSelection,
+  redraw = () => renderPageGrid(true),
+) {
   const file = state.previewedFile;
   editing = true;
   updatePageTools();
@@ -227,7 +261,7 @@ async function editPreviewedFile(verb, edit, keepSelection) {
     if (!keepSelection) selectedPages.clear();
     // The file now has changes to reset, so its row needs a Reset button
     redrawFileList();
-    await renderPageGrid(true);
+    await redraw();
   } catch (error) {
     // The screen may already show a change that didn't happen (a dragged page),
     // so redraw from the real bytes first, then show the error
@@ -254,10 +288,14 @@ selectAllButton.addEventListener('click', () => {
 });
 
 rotateButton.addEventListener('click', () => {
+  // Rotating doesn't change page numbers, so only the rotated pages need redrawing
+  const file = state.previewedFile;
+  const pages = [...selectedPages];
   editPreviewedFile(
     'rotate',
-    (bytes, pages) => rotatePages(bytes, pages, 90),
+    (bytes) => rotatePages(bytes, pages, 90),
     true,
+    () => redrawPages(file, pages),
   );
 });
 

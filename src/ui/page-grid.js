@@ -26,6 +26,7 @@ const extractButton = document.querySelector('#extract-button');
 const resetButton = document.querySelector('#reset-button');
 const topButton = document.querySelector('#top-button');
 const fileButton = document.querySelector('#file-button');
+const disclaimer = document.querySelector('footer p');
 const downloadButton = document.querySelector('#download-button');
 const previewError = document.querySelector('#preview-error');
 const pageHint = document.querySelector('#page-hint');
@@ -125,6 +126,8 @@ function updatePageTools() {
   // disappears and moves the thumbnails while the user is selecting them
   pageHint.hidden = pageCount === 0;
   pageHint.textContent = pageHintText(noSelection, allSelected);
+  // The bar may have grown or shrunk, which moves where the button floats
+  placeTopButton();
 }
 
 // Says how to get any hidden tools, or else how many pages are selected. While pages
@@ -437,15 +440,27 @@ extractButton.addEventListener('click', async () => {
 });
 
 // The back-to-top button shows once the page is scrolled more than a screen down.
-// passive: true promises the browser this listener never blocks scrolling, so
-// scrolling stays smooth.
-window.addEventListener(
-  'scroll',
-  () => {
-    topButton.hidden = window.scrollY < window.innerHeight;
-  },
-  { passive: true },
-);
+// It floats just above the bar (see the CSS), until the disclaimer at the end of
+// the page scrolls up past that spot. Then it rests on the disclaimer's line, at the
+// right, so at the end of the page it lines up with the footer and covers nothing.
+function placeTopButton() {
+  topButton.hidden = window.scrollY < window.innerHeight;
+  if (topButton.hidden) return;
+  // Clear any earlier shift first, so we measure where the CSS floats it
+  topButton.style.transform = '';
+  const floating = topButton.getBoundingClientRect();
+  const line = disclaimer.getBoundingClientRect();
+  // Where the button's top would be with its middle on the disclaimer's middle
+  const onLine = (line.top + line.bottom) / 2 - floating.height / 2;
+  // Only ever move it up, so it can never drop onto the bar
+  const shift = Math.max(0, floating.top - onLine);
+  if (shift > 0) topButton.style.transform = `translateY(-${shift}px)`;
+}
+
+// passive: true promises the browser these listeners never block scrolling, so
+// scrolling stays smooth
+window.addEventListener('scroll', placeTopButton, { passive: true });
+window.addEventListener('resize', placeTopButton, { passive: true });
 
 topButton.addEventListener('click', () => {
   // Smooth, unless the user has asked their device for less motion

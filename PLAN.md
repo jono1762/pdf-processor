@@ -6,7 +6,7 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 
 **Pitch:** Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
-## v1: Core page editor (in progress: testing write-up left)
+## v1: Core page editor (done)
 
 - Open PDFs by picker or drag and drop, with sample files to try
 - Rotate, delete, reorder and extract pages; merge files; download the result
@@ -17,10 +17,10 @@ A free, open-source PDF toolkit that runs entirely in the browser.
 **v1 is done when:**
 
 - There is a live deployed link
-- It works in recent Chrome and Edge (Firefox and Safari are checked later, in v3)
+- It works in recent Chrome and Edge, and in Safari and Chrome on phones (Firefox and desktop Safari are checked later, in v3)
 - Core PDF operations have unit tests
 - The DevTools Network tab shows no file data being sent anywhere
-- The live site has been tested on a real phone, including the 300-page sample and downloads
+- The live site has been tested on real phones, including the 300-page sample and downloads (see `TESTING.md`)
 
 ## v2: Scans and images
 

@@ -4,9 +4,11 @@ A free, open-source PDF toolkit that runs entirely in your browser.
 
 Popular PDF tools either cost money or upload your files to their servers. This one is free, and your files never leave your device.
 
-**Live demo:** https://jono1762.github.io/pdf-processor/ (tested in recent desktop Chrome and Edge; real-phone testing is still to come)
+**Live demo:** https://jono1762.github.io/pdf-processor/
 
-See [PLAN.md](PLAN.md) for the roadmap.
+**Tested on:** Chrome and Edge on Windows 11, Chrome on a Samsung Galaxy Z Fold5 (folded and unfolded) and Safari on an iPhone 12. See [TESTING.md](TESTING.md) for what was tested and what it found.
+
+See [PLAN.md](PLAN.md) for the roadmap, and [ARCHITECTURE.md](ARCHITECTURE.md) for how the code fits together.
 
 ## Features
 

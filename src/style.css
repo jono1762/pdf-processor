@@ -4,35 +4,28 @@ body {
   background: #f5f7fa;
   margin: 0;
   padding: 2rem 1rem;
-  /* Make the page at least as tall as the window, as a column, so the footer
-     can sit at the bottom when there is little content. On phones, 100vh can include
-     the space behind the browser's address bar, which would push the footer out of
-     view. dvh is the height actually visible. Browsers too old to know dvh ignore
-     this, and the footer simply follows the content instead. */
+  /* At least the visible height (dvh, unlike vh, excludes phone address bars), so the footer can sit at the bottom */
   min-height: 100dvh;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
 
-/* A centred column; the max width stops content stretching too far on huge screens */
+/* A centred column, capped so it doesn't stretch too far */
 main,
 footer {
-  /* width: 100% is needed because auto side margins stop a flex item stretching */
+  /* Needed because auto margins stop a flex item stretching */
   width: 100%;
   max-width: 64rem;
   margin: 0 auto;
 }
 
-/* main takes all the spare height, which pushes the footer to the bottom */
+/* Takes the spare height, pushing the footer down */
 main {
   flex: 1;
 }
 
-/* Elements with nothing in them yet take up no space, so on a short screen the footer
-   can come straight after the sample buttons. The grid's rule depends on the toolbar
-   instead of being empty, because the grid is briefly empty while it redraws, and
-   its position must not change then. ~ selects a later element with the same parent. */
+/* Empty elements take no space. The grid's rule uses the toolbar instead, since the grid is briefly empty while redrawing. */
 #file-list:empty,
 #message:empty,
 #preview-error:empty,
@@ -40,24 +33,20 @@ main {
   margin: 0;
 }
 
-/* One focus ring for every control. It is dark and dashed so it can't be mistaken
-   for the blue "selected" or "previewed" highlights. :focus-visible shows it for
-   keyboard use but not for mouse clicks. */
+/* One dashed focus ring, distinct from the blue highlights. Shown for keyboard use, not clicks. */
 :focus-visible {
   outline: 2px dashed #1f2933;
   outline-offset: 2px;
 }
 
-/* The logo and the name sit on one line, centred against each other */
+/* Logo and name on one line */
 h1 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* The heading's bottom margin provides the space here. Margins in a flex column don't
-   overlap as they normally do, so without this the intro would sit lower on the empty
-   page and jump up when a file is added. */
+/* Flex columns don't merge margins, so remove this one to stop the intro jumping */
 h1 + p {
   margin-top: 0;
 }
@@ -68,7 +57,7 @@ h1 + p {
   font-weight: 600;
 }
 
-/* The label and the sample buttons sit on one line, with a gap between them */
+/* Label and sample buttons on one line */
 .sample-row {
   display: flex;
   flex-wrap: wrap;
@@ -83,13 +72,12 @@ h1 + p {
   gap: 0.5rem;
 }
 
-/* All three match each other, and Merge further down */
+/* Same width as Merge */
 #sample-buttons button {
   min-width: 10rem;
 }
 
-/* Dashed box around the file picker; files can be dropped on it. It is the first
-   thing to do on the page, so it is large, centred and stands out on white. */
+/* The drop area: large and centred, as it's the first thing to do */
 #drop-area {
   padding: 2.5rem 1rem;
   border: 2px dashed #9aa5b1;
@@ -98,11 +86,7 @@ h1 + p {
   text-align: center;
 }
 
-/* Before any files are added, the drop area grows to fill the spare height on the
-   page, so there is no large gap above the footer. That needs main to lay out its
-   children as a column; :has() applies this only while the drop area is in this state.
-   max-height stops the box getting oversized on very tall screens, and border-box
-   counts the padding and border as part of that height. */
+/* Before any files, the drop area fills the spare height (capped on tall screens) */
 main:has(#drop-area:not(.has-files)) {
   display: flex;
   flex-direction: column;
@@ -118,16 +102,14 @@ main:has(#drop-area:not(.has-files)) {
   max-height: 60dvh;
 }
 
-/* With files added it shrinks to a slim row, title on the left and button on the
-   right. flex-wrap lets the button drop below the title if they don't both fit. */
+/* With files added, it shrinks to a slim row */
 #drop-area.has-files {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  /* The file rows have a 1px border and 0.75rem of padding. This border is 2px, so
-     1px less padding on the sides lines the button up with the buttons in those rows. */
+  /* 1px less than the file rows' padding, to make up for this thicker border */
   padding: 0.75rem calc(0.75rem - 1px);
   text-align: left;
 }
@@ -137,9 +119,7 @@ main:has(#drop-area:not(.has-files)) {
   font-size: 1rem;
 }
 
-/* Adding more is no longer the main action, so the button goes back to the plain
-   style, leaving Merge as the one solid blue button. It is also the same width as
-   the buttons in the file rows below it. */
+/* Plain once files are added, leaving Merge as the one blue button */
 #drop-area.has-files #file-button {
   min-width: 7.5rem;
   border-color: #9aa5b1;
@@ -148,7 +128,7 @@ main:has(#drop-area:not(.has-files)) {
   font-weight: normal;
 }
 
-/* Shown while files are being dragged over the box */
+/* While files are dragged over it */
 #drop-area.drag-over {
   border-color: #2563eb;
   background: #eff6ff;
@@ -162,8 +142,7 @@ main:has(#drop-area:not(.has-files)) {
   color: #52606d;
 }
 
-/* A header above the file list: the hint on the left, whole-list actions on the right.
-   Being above the list, it doesn't move as files are added or removed. */
+/* Hint on the left, whole-list buttons on the right */
 #list-header {
   display: flex;
   align-items: center;
@@ -171,35 +150,33 @@ main:has(#drop-area:not(.has-files)) {
   margin-top: 1rem;
 }
 
-/* The display: flex above would otherwise override the hidden attribute */
+/* Otherwise display: flex would override [hidden] */
 #list-header[hidden] {
   display: none;
 }
 
-/* flex: 1 gives the hint all the space beside the buttons, and it wraps inside that */
+/* The hint takes the spare space */
 #reorder-hint {
   flex: 1;
   margin: 0;
 }
 
-/* The file rows have a 1px border and 0.75rem of padding, so the same space here lines
-   these buttons up with the buttons in those rows */
+/* Lines these buttons up with those in the file rows */
 #list-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-  /* Always room for both buttons (7.5rem each and the gap), so nothing in this row or
-     below it moves when Reset all appears */
+  /* Room for both buttons, so nothing moves when Reset all appears */
   min-width: 15.5rem;
   margin-right: calc(0.75rem + 1px);
 }
 
-/* The same width as the buttons in the file rows */
+/* Same width as the row buttons */
 #list-actions button {
   min-width: 7.5rem;
 }
 
-/* Red outline and text, for buttons that throw work away */
+/* Red, for buttons that lose work */
 .danger {
   border-color: #b91c1c;
   color: #b91c1c;
@@ -211,7 +188,7 @@ main:has(#drop-area:not(.has-files)) {
   margin: 1rem 0;
 }
 
-/* Handle and file name on the left, buttons on the right */
+/* Handle and name on the left, buttons on the right */
 #file-list li {
   display: flex;
   justify-content: space-between;
@@ -223,13 +200,13 @@ main:has(#drop-area:not(.has-files)) {
   border-radius: 0.375rem;
 }
 
-/* The grip at the start of a row; drag it to reorder files */
+/* The grip for dragging files */
 .drag-handle {
   margin-right: 0.75rem;
   color: #9aa5b1;
   cursor: grab;
   user-select: none;
-  /* The browser leaves touches here to the page, so dragging the grip can't scroll */
+  /* Touching the grip drags instead of scrolling */
   touch-action: none;
 }
 
@@ -237,17 +214,16 @@ main:has(#drop-area:not(.has-files)) {
   margin-right: 0.75rem;
 }
 
-/* The name takes the free space, which pushes the buttons to the right */
+/* The name takes the spare space */
 .file-name {
   flex: 1;
-  /* By default a flex item won't shrink below its longest word, so a long file
-     name would push the buttons off the screen */
+  /* Lets a long name shrink instead of pushing the buttons off screen */
   min-width: 0;
-  /* Lets a long name with no spaces break onto a new line at any character */
+  /* Break long names anywhere */
   overflow-wrap: anywhere;
 }
 
-/* The row whose pages are shown in the grid */
+/* The previewed file's row */
 #file-list li.previewed {
   border-color: #2563eb;
   background: #eff6ff;
@@ -258,14 +234,12 @@ main:has(#drop-area:not(.has-files)) {
   gap: 0.5rem;
 }
 
-/* Wide enough for the longest label, "Previewing", so every button in the list is
-   the same width and nothing shifts when the previewed file changes. min-width
-   (not width) lets a button grow if a larger font would otherwise cut off its text. */
+/* Fits "Previewing", so the buttons don't change width */
 .file-actions button {
   min-width: 7.5rem;
 }
 
-/* Browsers give buttons their own small font, so set them to use the page's font */
+/* Buttons use the page font */
 button {
   padding: 0.4rem 0.9rem;
   border: 1px solid #9aa5b1;
@@ -276,7 +250,7 @@ button {
   cursor: pointer;
 }
 
-/* The main action in each part of the page is solid blue */
+/* The main action is solid blue */
 #file-button,
 #merge-button {
   background: #2563eb;
@@ -290,11 +264,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* While an edit or a merge runs, the page above the bar is inert and the bar's tools
-   are disabled (see runLocked in page-grid.js). Both grey out only if it takes longer
-   than 0.4 seconds: most edits finish sooner, and greying at once would make the whole
-   page flash on every one. The delay is only on the way in, so the page comes straight
-   back when it ends. */
+/* During an edit or merge, the locked page and the bar's tools grey out only after 0.4 s, so quick edits don't flash. They come back at once. */
 main > [inert] {
   opacity: 0.5;
   transition: opacity 0.2s 0.4s;
@@ -304,8 +274,7 @@ main > [inert] {
   transition: opacity 0.2s 0.4s;
 }
 
-/* The only button here that gets disabled is "Previewing". It reports a status,
-   so it stays readable instead of fading like an unavailable button. */
+/* "Previewing" is a status, so it stays readable */
 .file-actions button:disabled {
   opacity: 1;
   background: transparent;
@@ -313,7 +282,7 @@ main > [inert] {
   cursor: default;
 }
 
-/* Three equal columns; 1fr means one equal share of the width */
+/* Three equal columns */
 #page-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -321,21 +290,13 @@ main > [inert] {
   margin-top: 1.5rem;
 }
 
-/* A bar fixed to the bottom of the screen at every width, so the page tools are
-   always in reach on a long file without scrolling back up. It floats over the page,
-   so it never moves the thumbnails. safe-area-inset-bottom keeps it clear of the
-   iPhone's home bar. The side padding lines the buttons up with the page content,
-   which is at most 64rem wide and centred. */
+/* The page tools, in a bar fixed to the bottom. It floats over the page, clears the iPhone's home bar, and lines up with the content. */
 #page-tools {
   position: fixed;
   right: 0;
   bottom: 0;
   left: 0;
-  /* One row, with an equal column for each tool that is showing. Hidden tools leave
-     the grid (the browser's own rule for [hidden]), so the tools always share the
-     whole width, however many there are. minmax(0, 1fr) keeps them equal even when
-     one label is longer, because a plain 1fr column won't shrink below its content.
-     The bar floats over the page, so it rearranging can't move the thumbnails. */
+  /* An equal column for each showing tool. minmax(0, 1fr) keeps them equal even with a longer label. */
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
@@ -347,9 +308,7 @@ main > [inert] {
   box-shadow: 0 -0.25rem 1rem rgba(31, 41, 51, 0.15);
 }
 
-/* Room at the end of the page, so the bar can't cover the last pages or the footer.
-   :has() checks what's inside, so this only applies once a file is open. The scroll
-   padding does the same when keyboard focus scrolls a thumbnail into view. */
+/* Room at the end so the bar never covers the last page, including when focus scrolls */
 body:has(#page-tools:not([hidden])) {
   padding-bottom: 5rem;
 }
@@ -358,16 +317,12 @@ html:has(#page-tools:not([hidden])) {
   scroll-padding-bottom: 5rem;
 }
 
-/* The display: grid above would otherwise override the hidden attribute, because
-   the browser's own rule for hidden is weaker than any rule in this file */
+/* Otherwise display: grid would override [hidden] */
 #page-tools[hidden] {
   display: none;
 }
 
-/* A round button floating just above the bar's right end, lined up with the page
-   content. It is inside the bar and positioned against it (absolute positioning takes
-   it out of the bar's grid), so it moves up by itself when the bar grows a second
-   row. "#page-tools" in the selector makes it outrank the bar's own button rules. */
+/* Back-to-top: a round button just above the bar's right end. Positioned against the bar, so it rises with a second row. */
 #page-tools #top-button {
   position: absolute;
   right: max(1rem, calc((100% - 64rem) / 2));
@@ -381,14 +336,13 @@ html:has(#page-tools:not([hidden])) {
   font-size: 1.25rem;
 }
 
-/* Wide enough for its longest label, e.g. "Merge 2 of 4 files" */
+/* Fits labels like "Merge 2 of 4 files" */
 #merge-button {
   min-width: 10rem;
 }
 
-/* Each thumbnail is a button; reset the default button look so only the page shows */
-/* Not scoped to #page-grid: the copy that follows the pointer while dragging is
-   added to <body>, so it must match these rules too */
+/* Thumbnails are buttons; remove the button look */
+/* Not scoped to #page-grid, as the dragged copy is added to <body> */
 .page-thumb {
   padding: 0.25rem;
   border: 2px solid transparent;
@@ -398,33 +352,33 @@ html:has(#page-tools:not([hidden])) {
   color: #52606d;
 }
 
-/* Pages can be dragged to reorder them */
+/* Pages can be dragged */
 .page-thumb {
   cursor: grab;
-  /* Stop a long press selecting the caption or opening the iPhone callout menu */
+  /* No text selection or iPhone menu on a long press */
   user-select: none;
   -webkit-touch-callout: none;
 }
 
-/* The gap where the dragged page will land: faded, so it reads as a placeholder */
+/* Where the dragged page will land */
 .sortable-ghost {
   opacity: 0.4;
 }
 
-/* The copy that follows the pointer: lifted with a shadow */
+/* The dragged copy */
 .sortable-fallback {
   background: white;
   box-shadow: 0 0.5rem 1.5rem rgba(31, 41, 51, 0.3);
   cursor: grabbing;
 }
 
-/* Highlight the pages the user has selected */
+/* Selected pages */
 .page-thumb[aria-pressed='true'] {
   border-color: #2563eb;
   background: #bfdbfe;
 }
 
-/* Fill the column; height: auto keeps the page's proportions */
+/* Fill the column, keeping the page's shape */
 .page-thumb canvas {
   display: block;
   width: 100%;
@@ -442,7 +396,7 @@ html:has(#page-tools:not([hidden])) {
 #preview-error {
   color: #b91c1c;
   font-weight: 600;
-  /* These messages can include long file names */
+  /* May include long file names */
   overflow-wrap: anywhere;
 }
 
@@ -452,14 +406,12 @@ footer {
   color: #52606d;
 }
 
-/* At the end of the page, the back-to-top button rests on the disclaimer's line, at
-   the right (see placeTopButton in page-grid.js). Keep the text clear of it. */
+/* Keep the disclaimer clear of the back-to-top button, which rests on its line at the end */
 body:has(#page-tools:not([hidden])) footer p {
   padding-right: 3.75rem;
 }
 
-/* The browser centres a modal dialog, and limits its width so it fits on a phone.
-   Its text colour comes from the browser's own rule, so inherit the page's instead. */
+/* Fits phones, and uses the page's text colour */
 #confirm-dialog {
   box-sizing: border-box;
   width: 26rem;
@@ -469,39 +421,37 @@ body:has(#page-tools:not([hidden])) footer p {
   color: inherit;
 }
 
-/* Dims the page behind the dialog */
+/* Dims the page behind */
 #confirm-dialog::backdrop {
   background: rgba(31, 41, 51, 0.5);
 }
 
 #confirm-text {
   margin: 0 0 1rem;
-  /* The question can include a long file name */
+  /* May include a long file name */
   overflow-wrap: anywhere;
 }
 
-/* Two equal columns, so the buttons stay the same width whatever their labels say */
+/* Two equal columns */
 #confirm-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
 }
 
-/* Phone-sized screens. This stays at the end of the file because, when rules are
-   equally specific, the later one wins, so these replace the rules above. */
+/* Phones. At the end, so these win over equally specific rules above. */
 @media (max-width: 40rem) {
-  /* Slightly smaller, so the logo and name fit on one line on a narrow phone */
+  /* Fits the logo and name on one line */
   h1 {
     font-size: 1.75rem;
   }
 
-  /* Room for two lines even when the text only needs one, because a longer message
-     wraps here, and the thumbnails below shouldn't move when it changes */
+  /* Room for two lines, so the grid doesn't move when the text wraps */
   #page-hint {
     min-height: 2.5em;
   }
 
-  /* Two columns, so each thumbnail is large enough to read */
+  /* Two columns */
   #page-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -510,23 +460,20 @@ body:has(#page-tools:not([hidden])) footer p {
     flex-wrap: wrap;
   }
 
-  /* Full width forces the buttons onto their own line, leaving the whole first
-     line for the handle, checkbox and file name */
+  /* Puts the buttons on their own line */
   .file-actions {
     width: 100%;
     margin-top: 0.5rem;
   }
 
-  /* Each button takes an equal share of the row. Less padding at the sides, so the
-     labels fit on a narrow phone. */
+  /* Equal widths, less side padding */
   .file-actions button {
     flex: 1;
     min-width: 0;
     padding-inline: 0.25rem;
   }
 
-  /* Less padding than on larger screens, so the empty page fits a small phone without
-     scrolling and the footer keeps its space from the bottom of the screen */
+  /* Less padding, so the empty page fits a small phone */
   #drop-area {
     padding-block: 1.5rem;
   }
@@ -535,13 +482,12 @@ body:has(#page-tools:not([hidden])) footer p {
     flex-wrap: wrap;
   }
 
-  /* The whole first line, so the buttons drop below the hint */
+  /* The hint takes the first line */
   #reorder-hint {
     flex-basis: 100%;
   }
 
-  /* Half the width of the file row each, so they line up with the buttons in those
-     rows. The margins match the row's border and padding. */
+  /* Two columns, lined up with the row buttons */
   #list-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -554,44 +500,38 @@ body:has(#page-tools:not([hidden])) footer p {
     min-width: 0;
   }
 
-  /* The right-hand column, directly above the Remove buttons in the file rows. It stays
-     there when Reset all appears in the left-hand column. */
+  /* Stays above the Remove buttons when Reset all appears */
   #remove-all-button {
     grid-column: 2;
   }
 
-  /* Three equal columns on one row, so the samples stay available without pushing
-     the pages further down the screen */
+  /* Three equal columns */
   #sample-buttons {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     width: 100%;
   }
 
-  /* Less padding at the sides, so each label fits its column on a narrow phone */
+  /* Less side padding, so labels fit */
   #sample-buttons button {
     min-width: 0;
     padding-inline: 0.25rem;
   }
 
-  /* Less padding at the sides, so the labels have as much room as possible. On the
-     narrowest phones, longer ones like "Clear selection" wrap onto two lines. */
+  /* Less side padding. On the narrowest phones, long labels wrap. */
   #page-tools button {
     min-width: 0;
     padding-inline: 0.25rem;
   }
 
-  /* Half the row, less half the 0.5rem gap */
+  /* Half the row, minus half the gap */
   #merge-button {
     width: calc(50% - 0.25rem);
     min-width: 0;
   }
 }
 
-/* Too narrow for up to six page tools on one row: below 54rem (864px), each would be
-   under about 8rem wide, and labels like "Clear selection" would start to wrap. So the
-   selection tools take a second row, which appears once a page is selected. The
-   end-of-page space allows for both rows. */
+/* Below 54rem, six tools don't fit one row, so selection tools get a second row */
 @media (max-width: 54rem) {
   body:has(#page-tools:not([hidden])) {
     padding-bottom: 8rem;
@@ -600,11 +540,7 @@ body:has(#page-tools:not([hidden])) footer p {
     scroll-padding-bottom: 8rem;
   }
 
-  /* Two rows on a grid of six columns: the file's tools (Select all, Download and,
-     if there are changes, Reset) on the first, the selection's tools (Rotate, Extract
-     and, unless every page is selected, Delete) on the second. Two buttons take three
-     columns each and three take two each, so each row is always shared evenly.
-     :has() checks which optional buttons are showing. */
+  /* Six columns: two buttons span three each, three span two each, so each row is shared evenly */
   #page-tools {
     grid-auto-flow: row;
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -632,38 +568,35 @@ body:has(#page-tools:not([hidden])) footer p {
   }
 }
 
-/* Only for devices that can really hover, because on a touch screen a hover style
-   can stay stuck on a button after it is tapped */
+/* Only on real hover devices, as touch can leave hover stuck */
 @media (hover: hover) {
-  /* Thumbnails are buttons too, but this would hide their selected highlight */
+  /* Except thumbnails, which would lose their highlight */
   button:not(:disabled, .page-thumb):hover {
     background: #dbeafe;
     border-color: #2563eb;
   }
 
-  /* These are already blue, so they go a darker blue. Their white text stays readable. */
+  /* Darker blue */
   #file-button:hover,
   #merge-button:hover {
     background: #1d4ed8;
     border-color: #1d4ed8;
   }
 
-  /* Red buttons stay red on hover, so they can't be mistaken for a safe action. The
-     "button" in this selector is needed to outrank the general hover rule above. */
+  /* Red buttons stay red. "button" outranks the rule above. */
   button.danger:hover {
     background: #fee2e2;
     border-color: #b91c1c;
   }
 
-  /* Plain once files are added, so it hovers like the other plain buttons */
+  /* Plain hover once files are added */
   #drop-area.has-files #file-button:hover {
     border-color: #2563eb;
     background: #dbeafe;
   }
 }
 
-/* Touch screens, whatever their width. "coarse" means the main pointer is imprecise,
-   like a finger. 2.75rem (44px) is a common minimum size for something you tap. */
+/* Touch screens. 2.75rem (44px) is a common minimum tap size. */
 @media (pointer: coarse) {
   button {
     min-height: 2.75rem;
@@ -674,8 +607,7 @@ body:has(#page-tools:not([hidden])) footer p {
     height: 1.5rem;
   }
 
-  /* A larger area to touch, with the grip centred in it. The area already provides
-     the space beside the checkbox, so the margin is no longer needed. */
+  /* A larger touch area, grip centred */
   .drag-handle {
     display: flex;
     align-items: center;
@@ -685,9 +617,7 @@ body:has(#page-tools:not([hidden])) footer p {
     margin-right: 0;
   }
 
-  /* The dialog focuses Cancel when it opens, so pressing Enter straight away is safe.
-     iPhone Safari then shows the focus ring even though the dialog was opened with a
-     tap, so it looks as if Cancel was pressed. With touch, the ring isn't needed here. */
+  /* Cancel gets focus, and iPhone Safari would show its ring after a tap */
   #confirm-dialog :focus-visible {
     outline: none;
   }

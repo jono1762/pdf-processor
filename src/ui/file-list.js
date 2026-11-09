@@ -34,7 +34,7 @@ const listHeader = document.querySelector('#list-header');
 const resetAllButton = document.querySelector('#reset-all-button');
 const removeAllButton = document.querySelector('#remove-all-button');
 
-// The "Try a sample" buttons: what each says, what its file is called, how to make it
+// The sample buttons: label, file name, and the function that makes it
 const SAMPLES = [
   {
     label: 'Multi-page',
@@ -53,20 +53,18 @@ const SAMPLES = [
   },
 ];
 
-// The files that Merge will use: every file except those the user has unticked
+// The ticked files
 function filesToMerge() {
   return state.files.filter((file) => !file.excludedFromMerge);
 }
 
-// Says on the Merge button how many files it will merge, and hides it if that's
-// fewer than two
+// Shows the Merge count, and hides Merge below two files
 function updateMergeButton() {
   const total = state.files.length;
   const count = filesToMerge().length;
   mergeButton.hidden = count < 2;
 
-  // While Merge is hidden, say how to get it. With no files there's no hint, because
-  // the drop area already says what to do first.
+  // While Merge is hidden, say how to get it (no hint with no files)
   mergeHint.hidden = total === 0 || count >= 2;
   mergeHint.textContent =
     total === 1
@@ -80,9 +78,9 @@ function updateMergeButton() {
   }
 }
 
-// Rebuilds the visible list from `state.files`
+// Redraws the list from `state.files`
 function renderFileList() {
-  // If the previewed file is gone (or nothing was chosen yet), use the first file
+  // If the previewed file is gone, preview the first one
   if (!state.files.includes(state.previewedFile))
     state.previewedFile = state.files[0] ?? null;
 
@@ -91,36 +89,33 @@ function renderFileList() {
       const item = document.createElement('li');
       if (file === state.previewedFile) item.classList.add('previewed');
 
-      // Dragging starts from this handle only, so it never clashes with the buttons
+      // Drag only from the handle, so it doesn't clash with the buttons
       const handle = document.createElement('span');
       handle.className = 'drag-handle';
       handle.textContent = '⠿';
       handle.title = 'Drag to change the merge order';
 
-      // Ticked files are merged. The label is for screen readers; sighted users see
-      // the file name next to the box.
+      // Ticked files are merged. The label is for screen readers.
       const include = document.createElement('input');
       include.type = 'checkbox';
       include.checked = !file.excludedFromMerge;
       include.setAttribute('aria-label', `Include ${file.name} in merge`);
       include.addEventListener('change', () => {
         file.excludedFromMerge = !include.checked;
-        // Only the button changes. Redrawing the whole list would rebuild this
-        // checkbox and lose keyboard focus.
+        // Not a full redraw, which would lose this checkbox's focus
         updateMergeButton();
-        // An old merge error was about the old choice of files
+        // An old merge error no longer applies
         message.textContent = '';
       });
 
       const name = document.createElement('span');
       name.className = 'file-name';
-      // textContent (not innerHTML) so a file name can never be treated as HTML
+      // textContent, so a file name is never treated as HTML
       name.textContent = file.name;
 
       const previewButton = document.createElement('button');
       previewButton.type = 'button';
-      // The file already being previewed has nothing to switch to, so its button
-      // is disabled and its text says what is happening now
+      // The previewed file's button shows "Previewing" and is disabled
       const isPreviewed = file === state.previewedFile;
       previewButton.textContent = isPreviewed ? 'Previewing' : 'Preview';
       previewButton.disabled = isPreviewed;
@@ -139,11 +134,10 @@ function renderFileList() {
           'Remove',
         );
         if (!confirmed) return;
-        // Keep every file except this one, then redraw
+        // Keep every other file
         state.files = state.files.filter((other) => other !== file);
         renderFileList();
-        // Redrawing removed this button, and keyboard focus would be lost with it.
-        // preventScroll stops the browser jumping up to the new focus.
+        // This button is gone, so move focus. preventScroll stops a jump.
         fileButton.focus({ preventScroll: true });
       });
 
@@ -156,27 +150,24 @@ function renderFileList() {
     }),
   );
   updateMergeButton();
-  // Once there are files, adding more is no longer the main thing to do, so the CSS
-  // makes the drop area smaller and leaves more room for the pages
+  // With files added, the drop area shrinks
   dropArea.classList.toggle('has-files', state.files.length > 0);
-  // A merge order and "Remove all" only mean something with at least two files
+  // The header (merge order, Remove all) needs two files
   listHeader.hidden = state.files.length < 2;
-  // Like "Remove all", it needs at least two files to act on. One edited file is reset
-  // with Reset in the bottom bar while it is previewed.
+  // Needs two edited files; one is reset from the bottom bar
   resetAllButton.hidden = state.files.filter(isEdited).length < 2;
-  // An old error is about the old list, so clear it whenever the list changes
+  // An old error no longer applies
   message.textContent = '';
   renderPageGrid();
 }
 
-// Lets the user drag rows to change the order files are merged in. We make
-// state.files match the new order and redraw the list.
+// Dragging rows changes the merge order
 createSortable(fileList, {
   handle: '.drag-handle',
   onEnd({ oldIndex, newIndex }) {
     if (oldIndex === newIndex) return;
 
-    // Take the dragged file out of the list and put it where it was dropped
+    // Move the dragged file to where it was dropped
     const files = [...state.files];
     const [moved] = files.splice(oldIndex, 1);
     files.splice(newIndex, 0, moved);
@@ -190,7 +181,7 @@ for (const sample of SAMPLES) {
   button.type = 'button';
   button.textContent = sample.label;
   button.addEventListener('click', async () => {
-    // Disabled while the sample is made, so a second click can't add it twice
+    // Disabled while making it, so it can't be added twice
     button.disabled = true;
     try {
       const bytes = await sample.create();
@@ -206,22 +197,21 @@ for (const sample of SAMPLES) {
   sampleButtons.append(button);
 }
 
-// The page grid adds files too (extracted pages), so it needs a way to redraw the list
+// The grid adds files too (extract), so it needs to redraw the list
 setFileListRedraw(renderFileList);
 
-// Adds files to the end of the list. Used by the file picker and by drops.
+// Adds files to the list, from the picker or a drop
 async function addFiles(files) {
-  // Sort each file into one group, checking the type first, then the size.
-  // `else if` means a non-PDF never has its size checked.
+  // Sort files into groups: type first, then size
   const notPdf = [];
   const tooLarge = [];
   const accepted = [];
   for (const file of files) {
     if (!isPdfFile(file)) {
-      // The picker only offers PDFs, but a dropped file can be anything
+      // A dropped file can be anything
       notPdf.push(file);
     } else if (isTooLarge(file)) {
-      // Size is checked before reading, so a huge file is never loaded into memory
+      // Checked before reading, so a huge file is never loaded
       tooLarge.push(file);
     } else {
       accepted.push(file);
@@ -230,24 +220,24 @@ async function addFiles(files) {
 
   if (accepted.length > 0) {
     try {
-      // Read every file's bytes in parallel, keeping their order
+      // Read all files at once, keeping their order
       const added = await Promise.all(
         accepted.map(async (file) => {
           const bytes = await readFileBytes(file);
           return { name: file.name, bytes, originalBytes: bytes };
         }),
       );
-      // Adding to the list (not replacing it) lets the user add files in several rounds
+      // Add to the list, not replace it
       state.files = [...state.files, ...added];
       renderFileList();
     } catch {
-      // No variable after catch, since we don't need the technical details here
+      // No error variable: the details aren't needed
       message.textContent = 'A file could not be read from your device.';
       return;
     }
   }
 
-  // Shown after renderFileList, which clears the message line
+  // After renderFileList, which clears the message
   const listNames = (list) => list.map((file) => file.name).join(', ');
   const problems = [];
   if (notPdf.length > 0) {
@@ -260,12 +250,12 @@ async function addFiles(files) {
     );
   }
   if (problems.length > 0) {
-    // Each problem ends with its own full stop, so they are joined with a space
+    // Each ends with a full stop, so join with a space
     message.textContent = problems.join(' ');
   }
 }
 
-// The input is hidden, so this button opens its file chooser instead
+// The input is hidden; this button opens its chooser
 fileButton.addEventListener('click', () => fileInput.click());
 
 resetAllButton.addEventListener('click', async () => {
@@ -275,10 +265,10 @@ resetAllButton.addEventListener('click', async () => {
     'Reset all',
   );
   if (!confirmed) return;
-  // Only edited files, so a file with no changes keeps its selected pages
+  // Only edited files, so others keep their selection
   for (const file of state.files.filter(isEdited)) resetFile(file);
   renderFileList();
-  // This button is hidden now, and keyboard focus would be lost with it
+  // This button is now hidden, so move focus
   fileButton.focus({ preventScroll: true });
 });
 
@@ -290,33 +280,32 @@ removeAllButton.addEventListener('click', async () => {
   if (!confirmed) return;
   state.files = [];
   renderFileList();
-  // This button is hidden now, and keyboard focus would be lost with it
+  // This button is now hidden, so move focus
   fileButton.focus();
 });
 
 fileInput.addEventListener('change', () => {
-  // fileInput.files is not a real array; Array.from copies it into one
+  // fileInput.files isn't a real array; Array.from makes one
   const picked = Array.from(fileInput.files);
-  // Clear the picker, otherwise choosing the same file again would not fire "change"
+  // Clear it, so picking the same file again still fires "change"
   fileInput.value = '';
   addFiles(picked);
 });
 
-// True for drags that carry files, as opposed to, say, dragged text
+// True for drags carrying files, not text
 function dragHasFiles(event) {
   return event.dataTransfer?.types.includes('Files');
 }
 
 dropArea.addEventListener('dragover', (event) => {
   if (!dragHasFiles(event)) return;
-  // Without preventDefault the browser doesn't allow dropping here
+  // Needed to allow dropping
   event.preventDefault();
   dropArea.classList.add('drag-over');
 });
 
 dropArea.addEventListener('dragleave', (event) => {
-  // This also fires when the pointer moves onto something inside the area; ignore
-  // that, and only remove the highlight when the pointer really leaves
+  // Also fires when moving onto a child, so check the pointer really left
   if (!dropArea.contains(event.relatedTarget)) {
     dropArea.classList.remove('drag-over');
   }
@@ -328,8 +317,7 @@ dropArea.addEventListener('drop', (event) => {
   addFiles(Array.from(event.dataTransfer.files));
 });
 
-// A file dropped anywhere else would make the browser open it in this tab, and the
-// user would lose their work. Cancel the browser's default for file drags.
+// Stop a file dropped elsewhere from opening in this tab and losing the user's work
 for (const type of ['dragover', 'drop']) {
   window.addEventListener(type, (event) => {
     if (dragHasFiles(event)) event.preventDefault();
@@ -338,19 +326,18 @@ for (const type of ['dragover', 'drop']) {
 
 mergeButton.addEventListener('click', async () => {
   message.textContent = '';
-  // A file that can't be previewed won't merge either, so the merge error covers it
+  // The merge error covers any preview error
   clearPreviewError();
   try {
     const chosen = filesToMerge();
     const pdfs = chosen.map((file) => file.bytes);
     // The names let the error say which files are bad
     const names = chosen.map((file) => file.name);
-    // Locked like an edit, so nothing changes until the merged file is ready.
-    // An error comes out after unlocking, so screen readers announce it.
+    // Locked like an edit, so nothing changes until it's done
     const merged = await runLocked(() => mergePdfs(pdfs, names));
     downloadPdf(merged, 'merged.pdf');
   } catch (error) {
-    // Our own functions throw messages written for users, so show them as they are
+    // Our errors are written for users, so show them as they are
     message.textContent = error.message;
   }
 });

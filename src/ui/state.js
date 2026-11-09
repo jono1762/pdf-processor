@@ -1,15 +1,12 @@
-// Data shared by the UI modules. It is one object because a module can't reassign
-// a variable it imported, but every module can change the properties of an object.
+// Data shared by the UI modules. An object, because modules can't reassign imported
+// variables but can change an object's properties.
 export const state = {
-  // The PDFs the user has chosen, in order, as { name, bytes, originalBytes }. The
-  // bytes are read once when a file is added; edits replace them. originalBytes keeps
-  // what the file started as, for Reset. Until the first edit both point to the same
-  // array, so an unedited file uses no extra memory. Merging uses this list.
-  // A file made by extracting pages also has `extractedFrom` (its source file), and
-  // a file that has been extracted from has `extractionCount`. A file the user has
-  // unticked for merging has `excludedFromMerge: true`; without it, it is merged.
+  // The files in order, as { name, bytes, originalBytes }. Edits replace `bytes`;
+  // `originalBytes` is for Reset, and shares the same array until the first edit.
+  // Optional: `extractedFrom` (the source file), `extractionCount`, and
+  // `excludedFromMerge` (unticked).
   files: [],
-  // The file the user wants previewed. Stays put when other files are added or removed.
+  // The file whose pages are shown
   previewedFile: null,
 };
 
@@ -19,7 +16,6 @@ export const state = {
  * @returns {boolean}
  */
 export function isEdited(file) {
-  // Compares the arrays themselves, not their contents: every edit makes a new
-  // array, so they only match until the first edit. This is instant for any size.
+  // Compares the arrays, not their contents: each edit makes a new array
   return file.bytes !== file.originalBytes;
 }

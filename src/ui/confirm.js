@@ -1,5 +1,4 @@
-// Added to every question about throwing work away, because edits exist only in
-// the page's memory until they are downloaded
+// Edits only exist in memory until downloaded
 export const LOST_CHANGES_WARNING =
   "Any changes you haven't downloaded will be lost.";
 
@@ -8,14 +7,11 @@ const text = document.querySelector('#confirm-text');
 const cancelButton = document.querySelector('#confirm-cancel');
 const confirmButton = document.querySelector('#confirm-button');
 
-// The waiting caller's resolve function while the dialog is open, so the answer can
-// be handed to it. Cleared once answered, so one answer can't be given twice.
+// The open question's resolve function, cleared once answered
 let answer = null;
 
-// Answers the open question and closes the dialog. The answer is decided here, when
-// the user acts, not when the browser later fires the dialog's "close" event. That
-// event arrives a moment after closing, so if the dialog had been opened again in
-// that moment, it would answer the new question instead of the old one.
+// Answers the open question and closes the dialog. Answering here, not on the later
+// "close" event, stops a late event answering a question asked again meanwhile.
 function finish(confirmed) {
   const resolve = answer;
   answer = null;
@@ -25,7 +21,7 @@ function finish(confirmed) {
 
 cancelButton.addEventListener('click', () => finish(false));
 confirmButton.addEventListener('click', () => finish(true));
-// Esc, or Android's back button, fires "cancel" on a modal dialog before closing it
+// Esc or Android's back button
 dialog.addEventListener('cancel', () => finish(false));
 
 /**
@@ -35,14 +31,13 @@ dialog.addEventListener('cancel', () => finish(false));
  * @returns {Promise<boolean>} true if the user confirmed; false if they cancelled
  */
 export function confirmAction(question, actionLabel) {
-  // textContent (not innerHTML) because the question can include a file name
+  // textContent, since the question can include a file name
   text.textContent = question;
   confirmButton.textContent = actionLabel;
-  // showModal blocks the rest of the page and handles Esc and keyboard focus
+  // showModal blocks the page and handles Esc and focus
   dialog.showModal();
 
-  // The answer comes later, so hand back a promise that the caller can wait for.
-  // finish() resolves it when the user chooses.
+  // finish() resolves this when the user chooses
   return new Promise((resolve) => {
     answer = resolve;
   });

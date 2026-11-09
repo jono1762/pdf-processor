@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite';
 import { buildCsp } from './csp.js';
 
-// Puts the Content-Security-Policy into index.html as a <meta> tag. GitHub Pages
-// can't send HTTP headers, so a meta tag is how the policy reaches the browser.
+// Adds the Content-Security-Policy as a <meta> tag, since GitHub Pages can't set headers
 function contentSecurityPolicy() {
   return {
     name: 'content-security-policy',
     transformIndexHtml(html, context) {
-      // Only the dev server provides `context.server`, so this tells dev from build
+      // `context.server` only exists in dev
       const dev = Boolean(context.server);
       return {
         html,
@@ -18,7 +17,7 @@ function contentSecurityPolicy() {
               'http-equiv': 'Content-Security-Policy',
               content: buildCsp({ dev }),
             },
-            // First in <head>, so the policy is in place before anything else loads
+            // First in <head>, so it applies before anything loads
             injectTo: 'head-prepend',
           },
         ],
@@ -28,9 +27,7 @@ function contentSecurityPolicy() {
 }
 
 export default defineConfig({
-  // Relative paths, so the built site works from any folder. GitHub Pages serves it
-  // from /pdf-processor/, not from the root, and absolute paths like /assets/...
-  // would point at the wrong place.
+  // Relative paths, since GitHub Pages serves the site from /pdf-processor/
   base: './',
   plugins: [contentSecurityPolicy()],
 });

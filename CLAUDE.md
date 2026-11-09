@@ -2,7 +2,7 @@
 
 ## What this project is
 
-An open-source, browser-only PDF toolkit: merge PDFs, extract, reorder, rotate and delete pages, and OCR scanned PDFs into searchable PDFs. It is a portfolio project for entry-level software engineering roles. See `PLAN.md` for the roadmap.
+An open-source, browser-only PDF toolkit: merge PDFs, extract, reorder, rotate and delete pages, and (from v2) turn images into PDFs and OCR scanned pages into searchable text. It is a portfolio project for entry-level software engineering roles. See `PLAN.md` for the roadmap.
 
 ## Hard constraints
 
@@ -32,7 +32,7 @@ I'm learning while building, and I need to be able to explain every part of this
 - Never build a whole milestone or several features at once, even if asked to "continue" or "keep going". Finish one small piece, then stop for my review.
 - Work in small, reviewable steps: one feature or concern per change.
 - Before a non-trivial change, outline the plan briefly and wait for my OK.
-- Keep responses simple and concise.
+- Keep chat responses simple and to the point.
 - After a change, briefly explain what you did and why, including key trade-offs.
 - When there are several reasonable approaches, briefly list them with your recommendation instead of choosing silently.
 - Prefer simple, readable code over clever code. Add brief comments where intent or JavaScript behaviour isn't obvious, since I'm still learning the language.

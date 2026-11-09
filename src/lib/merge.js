@@ -10,15 +10,14 @@ import { PDFDocument } from 'pdf-lib';
  */
 // async: this function uses await, so it returns a Promise
 export async function mergePdfs(pdfs, names = []) {
-  // Load every file first, collecting failures, so the user hears about all
-  // the bad files at once instead of fixing them one merge at a time
+  // Load every file first, so all bad files are reported at once
   const sources = [];
   const failed = [];
   for (const [index, bytes] of pdfs.entries()) {
     try {
       sources.push(await PDFDocument.load(bytes));
     } catch (error) {
-      // ?? uses the right side only when the left is missing: no name given
+      // ?? uses the right side when there's no name
       failed.push({ name: names[index] ?? `File ${index + 1}`, error });
     }
   }
@@ -33,10 +32,10 @@ export async function mergePdfs(pdfs, names = []) {
     throw new Error(message, { cause: failed.map((file) => file.error) });
   }
 
-  // The new, empty document that all pages get copied into
+  // The new document to copy pages into
   const merged = await PDFDocument.create();
   for (const source of sources) {
-    // Pages can't be added directly from another document; copy them first
+    // Pages from another document must be copied first
     const pages = await merged.copyPages(source, source.getPageIndices());
     pages.forEach((page) => merged.addPage(page));
   }

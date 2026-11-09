@@ -1,7 +1,5 @@
-// Copies files PDF.js loads only when a PDF needs them into public/pdfjs. PDF.js
-// asks for them by their exact names from a folder, so they can't be imported
-// (Vite would rename them). npm runs this before `dev` and `build`. The copies
-// aren't committed, so they always match the installed version of PDF.js.
+// Copies PDF.js's extra files into public/pdfjs before `dev` and `build`. PDF.js wants
+// them by exact name, so they can't be imported (Vite renames files).
 import { copyFileSync, cpSync, mkdirSync } from 'node:fs';
 
 const FROM = 'node_modules/pdfjs-dist';
@@ -22,8 +20,7 @@ for (const file of WASM_FILES) {
   copyFileSync(`${FROM}/wasm/${file}`, `${TO}/wasm/${file}`);
 }
 
-// Whole folders: fonts for PDFs that don't include their own, and character
-// maps that many Chinese, Japanese and Korean PDFs need to show any text
+// Fonts for PDFs without their own, and character maps for Chinese, Japanese and Korean
 for (const folder of ['standard_fonts', 'cmaps']) {
   cpSync(`${FROM}/${folder}`, `${TO}/${folder}`, { recursive: true });
 }

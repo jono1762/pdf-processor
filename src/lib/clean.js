@@ -89,7 +89,19 @@ function detachFromRemovedPages(doc, removed) {
     const onAKeptPage = boxes.some(
       (box) => box instanceof PDFRef && keptAnnotations.has(box.tag),
     );
-    if (!onAKeptPage) acroForm.removeField(field);
+    if (!onAKeptPage) {
+      acroForm.removeField(field);
+    } else if (kids.length > 0) {
+      // A field with boxes on several pages stays, but loses its boxes on removed
+      // pages, since each box points back at its page. Backwards, as above.
+      const kidList = field.Kids();
+      for (let i = kidList.size() - 1; i >= 0; i--) {
+        const box = kidList.get(i);
+        if (box instanceof PDFRef && !keptAnnotations.has(box.tag)) {
+          kidList.remove(i);
+        }
+      }
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PDFDocument, PDFName, PDFString } from 'pdf-lib';
 import { deletePages } from './delete.js';
+import { extractPages } from './extract.js';
 
 // Each page draws a unique word with an uncompressed content stream, so a test can
 // search the saved bytes for it: if the word is in the file, so is that page.
@@ -108,6 +109,31 @@ describe('deleted pages are really gone from the saved file', () => {
     expect(doc.getTitle()).toBe('Generated test file');
   });
 
+  it('keeps a form field with boxes on several pages, minus the deleted box', async () => {
+    const pdf = await markedPdf(3, (doc) => {
+      const shared = doc.getForm().createTextField('shared');
+      shared.addToPage(doc.getPage(0), {
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 20,
+      });
+      shared.addToPage(doc.getPage(1), {
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 20,
+      });
+    });
+
+    const result = await deletePages(pdf, [1]);
+    const [field] = (await PDFDocument.load(result)).getForm().getFields();
+
+    expect(contains(result, 'MARKER-PAGE-2')).toBe(false);
+    expect(field.getName()).toBe('shared');
+    expect(field.acroField.getWidgets()).toHaveLength(1);
+  });
+
   it('keeps the title', async () => {
     const result = await deletePages(await markedPdf(3), [1]);
 
@@ -125,5 +151,26 @@ describe('deleted pages are really gone from the saved file', () => {
     );
 
     expect(result.length).toBeLessThan(pdf.length / 2);
+  });
+});
+
+describe('extracted files contain only the chosen pages', () => {
+  it('leaves out a page that a chosen page links to', async () => {
+    const pdf = await markedPdf(3, (doc) => {
+      const [first, second] = doc.getPages();
+      const link = doc.context.obj({
+        Type: 'Annot',
+        Subtype: 'Link',
+        Rect: [0, 0, 50, 50],
+        Dest: [second.ref, 'Fit'],
+      });
+      first.node.addAnnot(doc.context.register(link));
+    });
+
+    const result = await extractPages(pdf, [0]);
+
+    expect(contains(result, 'MARKER-PAGE-1')).toBe(true);
+    expect(contains(result, 'MARKER-PAGE-2')).toBe(false);
+    expect(contains(result, 'MARKER-PAGE-3')).toBe(false);
   });
 });

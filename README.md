@@ -21,6 +21,15 @@ See [PLAN.md](PLAN.md) for the roadmap.
 
 All processing happens locally in the browser. There is no backend, and no file data is sent anywhere. A Content-Security-Policy makes the browser block requests to any other site, so this is enforced and not only promised. You can check it yourself: open DevTools, go to the Network tab, and use the app. The only requests are the page's own files.
 
+Deleted pages are removed from the saved file, not just hidden, and an extracted file contains only the pages you chose, so other pages can't be recovered from a download.
+
+## Known limitations
+
+- Reordering, extracting or merging pages of a fillable form makes its boxes no longer fillable, and drops the file's title and bookmarks.
+- Deleting pages drops the file's bookmarks and custom page numbers (such as i, ii, iii).
+- Any edit invalidates a digital signature, as with every PDF editor.
+- Password-protected PDFs can't be opened.
+
 ## Tech stack
 
 Plain JavaScript, HTML and CSS, built with [Vite](https://vite.dev/). PDF handling uses [pdf-lib](https://pdf-lib.js.org/) and [PDF.js](https://mozilla.github.io/pdf.js/), and drag-and-drop reordering uses [SortableJS](https://sortablejs.github.io/Sortable/).

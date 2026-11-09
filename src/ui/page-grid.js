@@ -171,7 +171,8 @@ export async function renderPageGrid(force = false) {
 
   const thisRender = ++latestRender;
   pageGrid.replaceChildren();
-  // The error belongs to the previewed file, so it clears only when that file changes
+  // Any old error goes with the old drawing. A failed edit shows its error after
+  // this redraw has finished (see editPreviewedFile), so it isn't cleared here.
   previewError.textContent = '';
   if (!file) {
     drawing = false;

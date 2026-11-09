@@ -2,7 +2,7 @@
 
 ## What this project is
 
-An open-source, browser-only PDF toolkit: merge PDFs, extract, reorder, rotate and delete pages, and OCR scanned PDFs into searchable PDFs. It is a portfolio project for entry-level software engineering roles. See `PLAN.md` for the roadmap.
+An open-source, browser-only PDF toolkit: merge PDFs, extract, reorder, rotate and delete pages, and (from v2) turn images into PDFs and OCR scanned pages into searchable text. It is a portfolio project for entry-level software engineering roles. See `PLAN.md` for the roadmap.
 
 ## Hard constraints
 

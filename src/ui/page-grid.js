@@ -32,49 +32,43 @@ const previewError = document.querySelector('#preview-error');
 const pageHint = document.querySelector('#page-hint');
 const main = document.querySelector('main');
 
-// The width, in CSS pixels, the thumbnails were last drawn at (see columnWidth)
+// Width the thumbnails were last drawn at, in CSS pixels
 let thumbnailWidth = 320;
 
-// The hint shown while no pages are selected. "coarse" means the main pointer is
-// imprecise, like a finger, so touch screens get touch instructions.
+// Hint when nothing is selected. "coarse" means a finger, so touch gets touch wording.
 const PAGE_HINT = window.matchMedia('(pointer: coarse)').matches
   ? 'Tap to select pages to rotate, delete or extract them. Press and hold to drag.'
   : 'Click to select pages to rotate, delete or extract them. Drag to reorder.';
 
-// The file whose pages are actually drawn in the grid right now
+// The file whose pages are in the grid
 let drawnFile = null;
-// Counts grid renders, so a slow older render can tell it has been replaced
+// Counts drawings, so an older one can tell it has been replaced
 let latestRender = 0;
-// Zero-based numbers of the pages the user has selected in the grid
+// Selected page numbers, from 0
 const selectedPages = new Set();
-// True while an edit or a merge is running and the page is locked (see runLocked)
+// True while the page is locked for an edit or merge
 let busy = false;
-// How many pages the drawn file has; 0 until it has been opened
+// Pages in the drawn file; 0 until opened
 let pageCount = 0;
-// True while the thumbnails are still being drawn
+// True while thumbnails are being drawn
 let drawing = false;
 
-// Lets the user drag thumbnails to reorder them. Our job is to make the PDF match
-// once a drag ends.
+// Dragging thumbnails reorders pages. SortableJS moves them; we update the PDF.
 const sortable = createSortable(pageGrid, {
-  // Thumbnails fill a phone screen, so a touch must not start a drag straight away
-  // or swiping could never scroll the page. On touch, the finger must stay still
-  // for 200 milliseconds first. A mouse doesn't scroll by dragging, so it has no wait.
+  // On touch, hold for 200 ms before dragging, so swiping still scrolls
   delay: 200,
   delayOnTouchOnly: true,
-  // How many pixels a finger can wobble during the wait before it counts as a swipe
+  // Pixels a finger can move during the hold before it counts as a swipe
   touchStartThreshold: 5,
   onStart({ item }) {
-    // The floating copy under the pointer is made with cloneNode, which copies a
-    // canvas element but not what is drawn on it. Draw the thumbnail onto the copy.
+    // The dragged copy's canvas starts blank, so draw the thumbnail onto it
     const ghostCanvas = Sortable.ghost?.querySelector('canvas');
     ghostCanvas?.getContext('2d').drawImage(item.querySelector('canvas'), 0, 0);
   },
   onEnd({ oldIndex, newIndex }) {
     if (oldIndex === newIndex) return;
 
-    // Start from [0, 1, 2, ...], then take the dragged page out and put it where it
-    // was dropped. Array.from with a length builds that list of page numbers.
+    // Build [0, 1, 2, ...], then move the dragged page to where it was dropped
     const order = Array.from({ length: pageCount }, (_, i) => i);
     const [moved] = order.splice(oldIndex, 1);
     order.splice(newIndex, 0, moved);
@@ -83,55 +77,51 @@ const sortable = createSortable(pageGrid, {
       'reorder pages in',
       (bytes) => reorderPages(bytes, order),
       false,
-      // SortableJS has already moved the thumbnail, so only the numbers need updating
+      // The thumbnail has already moved; just renumber
       renumberPages,
     );
   },
 });
 
-// Shows only the tools that can be used right now, and a hint saying how to get the
-// ones that are hidden. Disabling is only for the moment while an edit is running.
+// Shows the tools that can be used now, and a hint about the hidden ones
 function updatePageTools() {
-  // With no file there are no pages to act on, so the tools aren't shown at all
+  // No file, no tools
   pageTools.hidden = !state.previewedFile;
 
-  // One button for both jobs: it clears the selection once every page is selected
+  // Becomes "Clear selection" once every page is selected
   const allSelected = pageCount > 0 && selectedPages.size === pageCount;
   selectAllButton.textContent = allSelected ? 'Clear selection' : 'Select all';
   selectAllButton.disabled = busy || pageCount === 0;
 
-  // The tools for selected pages are shown only while there is a selection
+  // These need a selection
   const noSelection = selectedPages.size === 0;
   rotateButton.hidden = noSelection;
   extractButton.hidden = noSelection;
-  // A PDF can't have zero pages, so deleting every page is not allowed
+  // A PDF needs at least one page
   deleteButton.hidden = noSelection || allSelected;
-  // A file with no changes has nothing to reset
+  // Only edited files can be reset
   resetButton.hidden = !state.previewedFile || !isEdited(state.previewedFile);
 
-  // These wait for a running edit, so it can't overlap with another one, and for the
-  // grid to finish drawing, so every thumbnail exists when the grid is updated after
+  // Edits wait for a running edit, and for drawing to finish
   rotateButton.disabled = busy || drawing;
   deleteButton.disabled = busy || drawing;
   extractButton.disabled = busy || drawing;
-  // Downloading needs a file but no selection; wait for a running edit so we get its result
+  // Wait for a running edit, so the download includes it
   downloadButton.disabled = busy || !state.previewedFile;
-  // Resetting during an edit would race with it
+  // Resetting mid-edit would clash with it
   resetButton.disabled = busy;
-  // Dragging needs the full grid (the page numbers must match) and no edit running
+  // Dragging needs the full grid and no edit running
   sortable.option('disabled', busy || drawing);
 
-  // This line always has something to say once there are pages, so it never
-  // disappears and moves the thumbnails while the user is selecting them
+  // Always shown once there are pages, so the grid never moves
   pageHint.hidden = pageCount === 0;
   pageHint.textContent = pageHintText(noSelection, allSelected);
-  // The bar may have grown or shrunk, which moves where the button floats
+  // The bar's height may have changed
   placeTopButton();
 }
 
-// Says how to get any hidden tools, or else how many pages are selected. While pages
-// are drawing, it says so here, in a line that is always there, rather than in a
-// separate line that would appear above the grid and push the thumbnails down.
+// The hint text: drawing progress, how to get hidden tools, or the selected count.
+// Drawing is shown here so no extra line appears above the grid and moves it.
 function pageHintText(noSelection, allSelected) {
   if (drawing) {
     const count = selectedPages.size;
@@ -147,23 +137,18 @@ function pageHintText(noSelection, allSelected) {
   return `${count} ${count === 1 ? 'page' : 'pages'} selected.`;
 }
 
-// Shows a thumbnail of every page of the previewed file.
-// `force` redraws even if the file is the same, e.g. after its pages were edited.
+// Draws a thumbnail of every page of the previewed file.
+// `force` redraws the same file, e.g. after a reset.
 export async function renderPageGrid(force = false) {
   const file = state.previewedFile;
-  // The grid already shows this file, so skip the redraw
+  // Already showing this file
   if (file === drawnFile && !force) return;
-  // Page numbers belong to one file, so a different file starts with nothing selected.
-  // Redrawing the same file keeps its page count, so that with every page selected,
-  // rotating doesn't make Delete flash on screen during the redraw.
+  // A different file starts with nothing selected
   if (file !== drawnFile) {
     selectedPages.clear();
     pageCount = 0;
   }
-  // Redrawing empties the grid until the new thumbnails are added, which would shrink
-  // the page and make the browser scroll up. Holding its height until then keeps the
-  // user in place after a reset. A different file starts from the top, so nothing is
-  // held for that.
+  // Hold the grid's height while it's empty, so a redraw doesn't scroll the page up
   pageGrid.style.minHeight =
     file === drawnFile ? `${pageGrid.offsetHeight}px` : '';
   drawnFile = file;
@@ -171,8 +156,7 @@ export async function renderPageGrid(force = false) {
 
   const thisRender = ++latestRender;
   pageGrid.replaceChildren();
-  // Any old error goes with the old drawing. A failed edit shows its error after
-  // this redraw has finished (see editPreviewedFile), so it isn't cleared here.
+  // Clear the old error. A failed edit sets its error after this redraw.
   previewError.textContent = '';
   if (!file) {
     drawing = false;
@@ -182,50 +166,46 @@ export async function renderPageGrid(force = false) {
   }
 
   drawing = true;
-  // Tells screen readers the grid is still being filled in
+  // Tells screen readers the grid is still loading
   pageGrid.setAttribute('aria-busy', 'true');
   updatePageTools();
   let pdfDoc;
   try {
     pdfDoc = await openPdfForRendering(file.bytes);
-    // Drawn at the size they're shown, not larger, so long files don't use more
-    // memory than they need (a fixed size was about 6 times too big on a phone)
+    // Draw at the shown size, to save memory
     thumbnailWidth = columnWidth();
 
-    // Every page gets its thumbnail straight away, as a blank page of the right size,
-    // and the pictures are drawn into them afterwards. So the grid has its full size
-    // from the start and doesn't grow while drawing, any page can be selected at once,
-    // and the page doesn't keep changing. (iPhone Safari ignores taps while new
-    // content keeps appearing, which made the page unresponsive while drawing.)
-    // Working out the sizes reads each page without drawing it, which is quick.
+    // Add a blank thumbnail of the right size for every page first, then draw into
+    // them. The grid never grows, so nothing moves, and iPhone Safari keeps
+    // responding to taps (it ignores them while new content keeps appearing).
     const sizes = [];
     for (let i = 0; i < pdfDoc.numPages; i++) {
       sizes.push(await getThumbnailSize(pdfDoc, i, thumbnailWidth));
-      // The user changed the file list meanwhile, so stop
+      // A newer drawing started, so stop
       if (thisRender !== latestRender) return;
     }
     const canvases = sizes.map((size, i) => addThumbnail(i, size));
     pageCount = pdfDoc.numPages;
-    // The grid has its full height again, so it no longer needs holding
+    // The grid is full height again
     pageGrid.style.minHeight = '';
     updatePageTools();
 
     for (let i = 0; i < pdfDoc.numPages; i++) {
       await renderPageThumbnail(pdfDoc, i, thumbnailWidth, canvases[i]);
-      // The user changed the file list while we were drawing, so stop
+      // A newer drawing started, so stop
       if (thisRender !== latestRender) return;
     }
   } catch (error) {
-    // Only report errors for the current file, not one the user has moved on from
+    // Only report errors for the current drawing
     if (thisRender === latestRender) {
       pageCount = 0;
       previewError.textContent = `Can't preview ${file.name}. ${error.message}`;
     }
   } finally {
-    // We only need the document while drawing; this frees its memory in PDF.js
+    // Free PDF.js's memory
     pdfDoc?.loadingTask.destroy();
     if (thisRender === latestRender) {
-      // Also covers an error before the thumbnails were added
+      // In case of an error before the thumbnails were added
       pageGrid.style.minHeight = '';
       pageGrid.removeAttribute('aria-busy');
       drawing = false;
@@ -234,26 +214,24 @@ export async function renderPageGrid(force = false) {
   }
 }
 
-// The width of one grid column now, in CSS pixels. The CSS decides the columns (two
-// on phones, three on larger screens), and getComputedStyle reports them as real
-// sizes, e.g. "312px 312px 312px". parseFloat reads the first number and stops.
+// One grid column's width in CSS pixels. getComputedStyle gives e.g.
+// "312px 312px 312px", and parseFloat reads the first number.
 function columnWidth() {
   const width = parseFloat(getComputedStyle(pageGrid).gridTemplateColumns);
-  // If the grid isn't laid out yet, there is no real size to read
+  // Not laid out yet
   return width > 0 ? Math.ceil(width) : 320;
 }
 
-// Adds a thumbnail for page `i` to the end of the grid, with a blank canvas of the
-// given size for the picture to be drawn into later. Returns that canvas.
+// Adds a blank thumbnail for page `i` and returns its canvas, to draw into later
 function addThumbnail(i, size) {
-  // A real button, so pages can be selected with the keyboard as well as the mouse
+  // A button, so it works with the keyboard
   const thumb = document.createElement('button');
   thumb.type = 'button';
   thumb.className = 'page-thumb';
-  // After a forced redraw, pages that were selected stay selected
+  // Keep the selection after a redraw
   thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
 
-  // Until it is drawn, the canvas is blank, and the CSS shows it as a white page
+  // Blank until drawn; the CSS shows it as a white page
   const canvas = document.createElement('canvas');
   canvas.width = size.width;
   canvas.height = size.height;
@@ -262,16 +240,15 @@ function addThumbnail(i, size) {
   thumb.append(canvas, caption);
 
   thumb.addEventListener('click', () => {
-    // Found when clicked, not remembered from now: deleting or dragging pages
-    // moves this thumbnail without redrawing it
+    // Looked up on click, since deleting or dragging moves thumbnails
     const i = pagePosition(thumb);
-    // Selected pages: click once to add, click again to remove
+    // Toggle
     if (selectedPages.has(i)) {
       selectedPages.delete(i);
     } else {
       selectedPages.add(i);
     }
-    // aria-pressed tells screen readers the state; the CSS uses it for the highlight
+    // aria-pressed is for screen readers and the CSS highlight
     thumb.setAttribute('aria-pressed', String(selectedPages.has(i)));
     updatePageTools();
   });
@@ -279,13 +256,12 @@ function addThumbnail(i, size) {
   return canvas;
 }
 
-// Thumbnails are in page order, so a thumbnail's position is its page number
+// A thumbnail's position is its page number
 function pagePosition(thumb) {
   return [...pageGrid.querySelectorAll('.page-thumb')].indexOf(thumb);
 }
 
-// Rewrites each thumbnail's caption and highlight from its position, after pages
-// were deleted or moved without being redrawn
+// Updates captions and highlights after pages were deleted or moved
 function renumberPages() {
   pageGrid.querySelectorAll('.page-thumb').forEach((thumb, i) => {
     thumb.querySelector('span').textContent = `Page ${i + 1}`;
@@ -293,10 +269,7 @@ function renumberPages() {
   });
 }
 
-// Redraws only the given pages of the previewed file, swapping each new picture into
-// its existing thumbnail. For edits that change how pages look but not their order
-// or count (rotating), so every other thumbnail and its click handler stay correct.
-// Much faster than redrawing a long file from scratch, and it doesn't flash.
+// Redraws only the given pages, e.g. after a rotate. Much faster than redrawing all.
 async function redrawPages(pages) {
   let pdfDoc;
   try {
@@ -311,17 +284,12 @@ async function redrawPages(pages) {
   }
 }
 
-// Runs `task` (an edit or a merge) with the page locked, and returns its result.
-// While it runs, the whole page except the bottom bar is inert: clicks, taps, drags,
-// drops and the keyboard all pass it by. So nothing can change under it (another
-// file previewed, a file removed or reset, a second edit), and it always works on
-// the files and the grid it started with. The bar's tools are disabled instead (see
-// updatePageTools), so screen readers still announce them as unavailable.
-// If the task fails, its error is thrown after the page is unlocked. Callers show it
-// then, because screen readers may not announce an alert inside an inert area.
+// Runs `task` (an edit or merge) with the page locked, and returns its result.
+// Everything but the bottom bar is inert, so nothing can change mid-task. The bar
+// is disabled instead, so screen readers still announce it. Errors are thrown after
+// unlocking, since screen readers may not announce an alert in an inert area.
 export async function runLocked(task) {
-  // Making an element inert, or disabling a button, takes focus away from it. So
-  // remember what had focus at the start, and give it back at the end.
+  // Locking takes focus away, so restore it afterwards
   const focused = document.activeElement;
   setLocked(true);
   try {
@@ -340,11 +308,10 @@ function setLocked(value) {
   updatePageTools();
 }
 
-// Runs an edit on the previewed file, then redraws the grid. `edit` gets the file's
-// bytes and the selected page numbers. `verb` is only used in the error message.
-// `keepSelection` is for edits that don't change page numbers (rotating); after
-// deleting or reordering, the old numbers are wrong. `redraw` updates the grid
-// afterwards, and by default redraws every page.
+// Edits the previewed file, then updates the grid.
+// `edit(bytes, pages)` returns new bytes. `verb` is for the error message.
+// `keepSelection` is for edits that keep page numbers (rotating).
+// `redraw` updates the grid; by default it redraws every page.
 async function editPreviewedFile(
   verb,
   edit,
@@ -354,23 +321,22 @@ async function editPreviewedFile(
   const file = state.previewedFile;
   try {
     await runLocked(async () => {
-      // Replace the file's bytes with the edited version
+      // Swap in the edited version
       file.bytes = await edit(file.bytes, [...selectedPages]);
       if (!keepSelection) selectedPages.clear();
-      // The file now has changes to reset, so its row needs a Reset button
+      // Reset all depends on which files are edited
       redrawFileList();
       await redraw();
     });
   } catch (error) {
-    // The screen may already show a change that didn't happen (a dragged page),
-    // so redraw from the real bytes first, then show the error
+    // The screen may show a change that failed (a dragged page), so redraw first
     await renderPageGrid(true);
     previewError.textContent = `Can't ${verb} ${file.name}. ${error.message}`;
   }
 }
 
 selectAllButton.addEventListener('click', () => {
-  // Anything less than every page selected means "select all"; otherwise clear
+  // Select all, or clear if everything is already selected
   const selectEverything = selectedPages.size < pageCount;
   selectedPages.clear();
   if (selectEverything) {
@@ -381,7 +347,7 @@ selectAllButton.addEventListener('click', () => {
 });
 
 rotateButton.addEventListener('click', () => {
-  // Rotating doesn't change page numbers, so only the rotated pages need redrawing
+  // Only the rotated pages need redrawing
   const pages = [...selectedPages];
   editPreviewedFile(
     'rotate',
@@ -398,43 +364,38 @@ deleteButton.addEventListener('click', async () => {
     (bytes) => deletePages(bytes, pages),
     false,
     () => {
-      // The other pictures are still right, so just take out the deleted thumbnails
+      // Just remove the deleted thumbnails
       const thumbs = pageGrid.querySelectorAll('.page-thumb');
       for (const i of pages) thumbs[i].remove();
       pageCount -= pages.length;
       renumberPages();
     },
   );
-  // Deleting clears the selection, which hides this button. Keyboard focus would be
-  // lost with it, so move focus to the nearest button that stays visible.
-  // preventScroll stops the browser jumping up to that button.
+  // This button is now hidden, so move focus. preventScroll stops a jump.
   selectAllButton.focus({ preventScroll: true });
 });
 
 extractButton.addEventListener('click', async () => {
   const file = state.previewedFile;
-  // A Set has no click order, so sort: the new file keeps the original page order
+  // Keep the original page order
   const pages = [...selectedPages].sort((a, b) => a - b);
   try {
     const bytes = await runLocked(() => extractPages(file.bytes, pages));
 
-    // Each file counts its extractions, and the count only goes up. So removing
-    // "report-pages-1.pdf" never leads to a second file with the same name.
+    // The count only goes up, so names are never reused
     file.extractionCount = (file.extractionCount ?? 0) + 1;
     const extracted = {
       name: extractedFilename(file.name, file.extractionCount),
       bytes,
-      // Resetting this file goes back to the pages it was created with
+      // Resetting goes back to these pages
       originalBytes: bytes,
-      // Remembers the source, so later extractions can be grouped under it
+      // For grouping under the source in the list
       extractedFrom: file,
-      // Its pages are also in the source, so merging everything would repeat them.
-      // The user ticks it when they want it merged.
+      // Unticked, since merging it too would repeat pages
       excludedFromMerge: true,
     };
 
-    // Go under the last extraction from this file, or under the file itself if
-    // there are none yet
+    // Place it after the source and its earlier extractions
     let last = state.files.indexOf(file);
     state.files.forEach((other, index) => {
       if (other.extractedFrom === file) last = index;
@@ -451,37 +412,33 @@ extractButton.addEventListener('click', async () => {
   }
 });
 
-// The back-to-top button shows once the page is scrolled more than a screen down.
-// It floats just above the bar (see the CSS), until the disclaimer at the end of
-// the page scrolls up past that spot. Then it rests on the disclaimer's line, at the
-// right, so at the end of the page it lines up with the footer and covers nothing.
+// Shows the back-to-top button after a screen of scrolling. It floats above the bar,
+// and at the end of the page rests on the disclaimer's line instead.
 function placeTopButton() {
   topButton.hidden = window.scrollY < window.innerHeight;
   if (topButton.hidden) return;
-  // Clear any earlier shift first, so we measure where the CSS floats it
+  // Measure where the CSS puts it, without the old shift
   topButton.style.transform = '';
   const floating = topButton.getBoundingClientRect();
   const line = disclaimer.getBoundingClientRect();
-  // Where the button's top would be with its middle on the disclaimer's middle
+  // Its top if centred on the disclaimer
   const onLine = (line.top + line.bottom) / 2 - floating.height / 2;
-  // Only ever move it up, so it can never drop onto the bar
+  // Only move it up, never onto the bar
   const shift = Math.max(0, floating.top - onLine);
   if (shift > 0) topButton.style.transform = `translateY(-${shift}px)`;
 }
 
-// passive: true promises the browser these listeners never block scrolling, so
-// scrolling stays smooth
+// passive: these never block scrolling, so it stays smooth
 window.addEventListener('scroll', placeTopButton, { passive: true });
 window.addEventListener('resize', placeTopButton, { passive: true });
 
 topButton.addEventListener('click', () => {
-  // Smooth, unless the user has asked their device for less motion
+  // Smooth, unless the device asks for less motion
   const reduceMotion = window.matchMedia(
     '(prefers-reduced-motion: reduce)',
   ).matches;
   window.scrollTo({ top: 0, behavior: reduceMotion ? 'instant' : 'smooth' });
-  // This button hides at the top, so give keyboard focus to the first control there.
-  // preventScroll stops it fighting the smooth scroll.
+  // This button hides at the top, so move focus there
   fileButton.focus({ preventScroll: true });
 });
 
@@ -497,21 +454,19 @@ resetButton.addEventListener('click', async () => {
   );
   if (!confirmed) return;
   resetFile(file);
-  // The file list's Reset all button depends on how many files have changes
+  // Reset all depends on which files are edited
   redrawFileList();
-  // Resetting hides this button, and keyboard focus would be lost with it
+  // This button is now hidden, so move focus
   selectAllButton.focus({ preventScroll: true });
 });
 
-// Set by file-list.js. It lets the grid ask for the file list to be redrawn without
-// importing file-list.js, which already imports this file.
+// Set by file-list.js, so the grid can redraw the list without a circular import
 let redrawFileList = () => {};
 export function setFileListRedraw(redraw) {
   redrawFileList = redraw;
 }
 
-// Puts a file back to what it started as. Its page numbers may change, so if its
-// pages are showing, the selection is cleared and they are redrawn.
+// Puts a file back to how it started, redrawing it if it's showing
 export function resetFile(file) {
   file.bytes = file.originalBytes;
   if (file === state.previewedFile) {
@@ -520,7 +475,7 @@ export function resetFile(file) {
   }
 }
 
-// Lets other modules clear the preview error, e.g. when merging starts
+// Lets other modules clear the preview error
 export function clearPreviewError() {
   previewError.textContent = '';
 }

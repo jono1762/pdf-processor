@@ -16,22 +16,19 @@ export async function extractPages(pdf, pageIndices) {
   // Check every page number before changing anything
   checkPageIndices(pageIndices, pageCount);
 
-  // First take out every page that wasn't chosen, with the same clean-up as
-  // Delete. Copying the chosen pages straight into a new file isn't enough: a
-  // link on a chosen page can point at another page, and copying would bring that
-  // page along, hidden inside the new file.
+  // Remove the unchosen pages first, as Delete does. Copying alone isn't safe: a
+  // link to another page would bring that page along, hidden.
   const chosen = new Set(pageIndices);
   const unchosen = doc.getPageIndices().filter((index) => !chosen.has(index));
   const removed = unchosen.map((index) => doc.getPage(index).ref);
-  // Backwards, so removing a page doesn't shift the numbers still to remove
+  // Backwards, since removing a page shifts the numbers after it
   for (const index of unchosen.reverse()) {
     doc.removePage(index);
   }
   const cleaned = await PDFDocument.load(await saveWithout(doc, removed));
 
-  // The cleaned file holds only the chosen pages, in their original order. Copy
-  // them into the order asked for (a page can be chosen more than once). Each
-  // original page number becomes its place among the chosen pages.
+  // Copy the chosen pages into the order asked for (repeats allowed). Each original
+  // page number becomes its position among the chosen pages.
   const inOriginalOrder = [...chosen].sort((a, b) => a - b);
   const result = await PDFDocument.create();
   const pages = await result.copyPages(

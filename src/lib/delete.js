@@ -22,16 +22,15 @@ export async function deletePages(pdf, pageIndices) {
     );
   }
 
-  // Remember which pages go, so their leftovers can be removed when saving
+  // Remembered for the clean-up when saving
   const removed = [...toDelete].map((index) => doc.getPage(index).ref);
 
-  // Delete from the last page backwards. Removing a page shifts the numbers of the
-  // pages after it, so going backwards keeps the remaining numbers correct.
+  // Backwards, since removing a page shifts the numbers after it
   const lastFirst = [...toDelete].sort((a, b) => b - a);
   for (const index of lastFirst) {
     doc.removePage(index);
   }
 
-  // Not doc.save(): that would still write the deleted pages' content into the file
+  // Not doc.save(), which would keep the deleted pages in the file
   return saveWithout(doc, removed);
 }

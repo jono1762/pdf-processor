@@ -32,9 +32,8 @@ const previewError = document.querySelector('#preview-error');
 const pageHint = document.querySelector('#page-hint');
 const main = document.querySelector('main');
 
-// Roughly the width of one grid column on a desktop screen, so thumbnails are drawn
-// at about their shown size there
-const THUMBNAIL_WIDTH = 320;
+// The width, in CSS pixels, the thumbnails were last drawn at (see columnWidth)
+let thumbnailWidth = 320;
 
 // The hint shown while no pages are selected. "coarse" means the main pointer is
 // imprecise, like a finger, so touch screens get touch instructions.
@@ -188,6 +187,9 @@ export async function renderPageGrid(force = false) {
   let pdfDoc;
   try {
     pdfDoc = await openPdfForRendering(file.bytes);
+    // Drawn at the size they're shown, not larger, so long files don't use more
+    // memory than they need (a fixed size was about 6 times too big on a phone)
+    thumbnailWidth = columnWidth();
 
     // Every page gets its thumbnail straight away, as a blank page of the right size,
     // and the pictures are drawn into them afterwards. So the grid has its full size
@@ -197,7 +199,7 @@ export async function renderPageGrid(force = false) {
     // Working out the sizes reads each page without drawing it, which is quick.
     const sizes = [];
     for (let i = 0; i < pdfDoc.numPages; i++) {
-      sizes.push(await getThumbnailSize(pdfDoc, i, THUMBNAIL_WIDTH));
+      sizes.push(await getThumbnailSize(pdfDoc, i, thumbnailWidth));
       // The user changed the file list meanwhile, so stop
       if (thisRender !== latestRender) return;
     }
@@ -208,7 +210,7 @@ export async function renderPageGrid(force = false) {
     updatePageTools();
 
     for (let i = 0; i < pdfDoc.numPages; i++) {
-      await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH, canvases[i]);
+      await renderPageThumbnail(pdfDoc, i, thumbnailWidth, canvases[i]);
       // The user changed the file list while we were drawing, so stop
       if (thisRender !== latestRender) return;
     }
@@ -229,6 +231,15 @@ export async function renderPageGrid(force = false) {
       updatePageTools();
     }
   }
+}
+
+// The width of one grid column now, in CSS pixels. The CSS decides the columns (two
+// on phones, three on larger screens), and getComputedStyle reports them as real
+// sizes, e.g. "312px 312px 312px". parseFloat reads the first number and stops.
+function columnWidth() {
+  const width = parseFloat(getComputedStyle(pageGrid).gridTemplateColumns);
+  // If the grid isn't laid out yet, there is no real size to read
+  return width > 0 ? Math.ceil(width) : 320;
 }
 
 // Adds a thumbnail for page `i` to the end of the grid, with a blank canvas of the
@@ -291,7 +302,7 @@ async function redrawPages(pages) {
     pdfDoc = await openPdfForRendering(state.previewedFile.bytes);
     const thumbs = pageGrid.querySelectorAll('.page-thumb');
     for (const i of pages) {
-      const canvas = await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH);
+      const canvas = await renderPageThumbnail(pdfDoc, i, thumbnailWidth);
       thumbs[i].querySelector('canvas').replaceWith(canvas);
     }
   } finally {

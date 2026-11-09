@@ -26,14 +26,14 @@ const extractButton = document.querySelector('#extract-button');
 const resetButton = document.querySelector('#reset-button');
 const topButton = document.querySelector('#top-button');
 const fileButton = document.querySelector('#file-button');
+const disclaimer = document.querySelector('footer p');
 const downloadButton = document.querySelector('#download-button');
 const previewError = document.querySelector('#preview-error');
 const pageHint = document.querySelector('#page-hint');
 const main = document.querySelector('main');
 
-// Roughly the width of one grid column on a desktop screen, so thumbnails are drawn
-// at about their shown size there
-const THUMBNAIL_WIDTH = 320;
+// The width, in CSS pixels, the thumbnails were last drawn at (see columnWidth)
+let thumbnailWidth = 320;
 
 // The hint shown while no pages are selected. "coarse" means the main pointer is
 // imprecise, like a finger, so touch screens get touch instructions.
@@ -125,6 +125,8 @@ function updatePageTools() {
   // disappears and moves the thumbnails while the user is selecting them
   pageHint.hidden = pageCount === 0;
   pageHint.textContent = pageHintText(noSelection, allSelected);
+  // The bar may have grown or shrunk, which moves where the button floats
+  placeTopButton();
 }
 
 // Says how to get any hidden tools, or else how many pages are selected. While pages
@@ -185,6 +187,9 @@ export async function renderPageGrid(force = false) {
   let pdfDoc;
   try {
     pdfDoc = await openPdfForRendering(file.bytes);
+    // Drawn at the size they're shown, not larger, so long files don't use more
+    // memory than they need (a fixed size was about 6 times too big on a phone)
+    thumbnailWidth = columnWidth();
 
     // Every page gets its thumbnail straight away, as a blank page of the right size,
     // and the pictures are drawn into them afterwards. So the grid has its full size
@@ -194,7 +199,7 @@ export async function renderPageGrid(force = false) {
     // Working out the sizes reads each page without drawing it, which is quick.
     const sizes = [];
     for (let i = 0; i < pdfDoc.numPages; i++) {
-      sizes.push(await getThumbnailSize(pdfDoc, i, THUMBNAIL_WIDTH));
+      sizes.push(await getThumbnailSize(pdfDoc, i, thumbnailWidth));
       // The user changed the file list meanwhile, so stop
       if (thisRender !== latestRender) return;
     }
@@ -205,7 +210,7 @@ export async function renderPageGrid(force = false) {
     updatePageTools();
 
     for (let i = 0; i < pdfDoc.numPages; i++) {
-      await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH, canvases[i]);
+      await renderPageThumbnail(pdfDoc, i, thumbnailWidth, canvases[i]);
       // The user changed the file list while we were drawing, so stop
       if (thisRender !== latestRender) return;
     }
@@ -226,6 +231,15 @@ export async function renderPageGrid(force = false) {
       updatePageTools();
     }
   }
+}
+
+// The width of one grid column now, in CSS pixels. The CSS decides the columns (two
+// on phones, three on larger screens), and getComputedStyle reports them as real
+// sizes, e.g. "312px 312px 312px". parseFloat reads the first number and stops.
+function columnWidth() {
+  const width = parseFloat(getComputedStyle(pageGrid).gridTemplateColumns);
+  // If the grid isn't laid out yet, there is no real size to read
+  return width > 0 ? Math.ceil(width) : 320;
 }
 
 // Adds a thumbnail for page `i` to the end of the grid, with a blank canvas of the
@@ -288,7 +302,7 @@ async function redrawPages(pages) {
     pdfDoc = await openPdfForRendering(state.previewedFile.bytes);
     const thumbs = pageGrid.querySelectorAll('.page-thumb');
     for (const i of pages) {
-      const canvas = await renderPageThumbnail(pdfDoc, i, THUMBNAIL_WIDTH);
+      const canvas = await renderPageThumbnail(pdfDoc, i, thumbnailWidth);
       thumbs[i].querySelector('canvas').replaceWith(canvas);
     }
   } finally {
@@ -437,15 +451,27 @@ extractButton.addEventListener('click', async () => {
 });
 
 // The back-to-top button shows once the page is scrolled more than a screen down.
-// passive: true promises the browser this listener never blocks scrolling, so
-// scrolling stays smooth.
-window.addEventListener(
-  'scroll',
-  () => {
-    topButton.hidden = window.scrollY < window.innerHeight;
-  },
-  { passive: true },
-);
+// It floats just above the bar (see the CSS), until the disclaimer at the end of
+// the page scrolls up past that spot. Then it rests on the disclaimer's line, at the
+// right, so at the end of the page it lines up with the footer and covers nothing.
+function placeTopButton() {
+  topButton.hidden = window.scrollY < window.innerHeight;
+  if (topButton.hidden) return;
+  // Clear any earlier shift first, so we measure where the CSS floats it
+  topButton.style.transform = '';
+  const floating = topButton.getBoundingClientRect();
+  const line = disclaimer.getBoundingClientRect();
+  // Where the button's top would be with its middle on the disclaimer's middle
+  const onLine = (line.top + line.bottom) / 2 - floating.height / 2;
+  // Only ever move it up, so it can never drop onto the bar
+  const shift = Math.max(0, floating.top - onLine);
+  if (shift > 0) topButton.style.transform = `translateY(-${shift}px)`;
+}
+
+// passive: true promises the browser these listeners never block scrolling, so
+// scrolling stays smooth
+window.addEventListener('scroll', placeTopButton, { passive: true });
+window.addEventListener('resize', placeTopButton, { passive: true });
 
 topButton.addEventListener('click', () => {
   // Smooth, unless the user has asked their device for less motion

@@ -354,11 +354,6 @@ body:has(#page-tools:not([hidden])) {
   padding-bottom: 5rem;
 }
 
-/* More room while the back-to-top button shows, so it can't cover the last pages */
-body:has(#top-button:not([hidden])) {
-  padding-bottom: 9rem;
-}
-
 html:has(#page-tools:not([hidden])) {
   scroll-padding-bottom: 5rem;
 }
@@ -455,6 +450,12 @@ footer {
   margin-top: 1rem;
   font-size: 0.875rem;
   color: #52606d;
+}
+
+/* At the end of the page, the back-to-top button rests on the disclaimer's line, at
+   the right (see placeTopButton in page-grid.js). Keep the text clear of it. */
+body:has(#page-tools:not([hidden])) footer p {
+  padding-right: 3.75rem;
 }
 
 /* The browser centres a modal dialog, and limits its width so it fits on a phone.
@@ -595,11 +596,6 @@ footer {
   body:has(#page-tools:not([hidden])) {
     padding-bottom: 8rem;
   }
-
-  body:has(#top-button:not([hidden])) {
-    padding-bottom: 12rem;
-  }
-
   html:has(#page-tools:not([hidden])) {
     scroll-padding-bottom: 8rem;
   }

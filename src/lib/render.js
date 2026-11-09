@@ -41,9 +41,11 @@ export async function openPdfForRendering(bytes) {
 // The viewport that draws a page exactly `width` CSS pixels wide.
 // High-resolution screens pack several real pixels into one CSS pixel
 // (devicePixelRatio is 2 on many laptops and phones). Drawing that many pixels
-// keeps the thumbnail sharp when CSS sets the displayed size.
+// keeps the thumbnail sharp when CSS sets the displayed size. Above 2 it is capped:
+// at thumbnail size 3 looks no sharper, but uses 2.25 times the memory, which made
+// long files reload the page on an iPhone.
 function thumbnailViewport(page, width) {
-  const pixelWidth = width * window.devicePixelRatio;
+  const pixelWidth = width * Math.min(window.devicePixelRatio, 2);
   // Work out the scale that makes the page exactly `pixelWidth` pixels wide
   const fullSize = page.getViewport({ scale: 1 });
   return page.getViewport({ scale: pixelWidth / fullSize.width });

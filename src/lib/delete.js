@@ -1,4 +1,5 @@
 import { loadPdf, checkPageIndices } from './validate.js';
+import { saveWithout } from './clean.js';
 
 /**
  * Removes the chosen pages from a PDF.
@@ -21,6 +22,9 @@ export async function deletePages(pdf, pageIndices) {
     );
   }
 
+  // Remember which pages go, so their leftovers can be removed when saving
+  const removed = [...toDelete].map((index) => doc.getPage(index).ref);
+
   // Delete from the last page backwards. Removing a page shifts the numbers of the
   // pages after it, so going backwards keeps the remaining numbers correct.
   const lastFirst = [...toDelete].sort((a, b) => b - a);
@@ -28,5 +32,6 @@ export async function deletePages(pdf, pageIndices) {
     doc.removePage(index);
   }
 
-  return doc.save();
+  // Not doc.save(): that would still write the deleted pages' content into the file
+  return saveWithout(doc, removed);
 }
